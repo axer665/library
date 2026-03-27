@@ -1,0 +1,80 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: library_postgres
+    environment:
+      POSTGRES_DB: library_catalog
+      POSTGRES_USER: library_user
+      POSTGRES_PASSWORD: library_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U library_user -d library_catalog"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library_net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: library_backend
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/storage:/var/www/html/storage
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: library_catalog
+      DB_USERNAME: library_user
+      DB_PASSWORD: library_password
+      JWT_SECRET: ${JWT_SECRET:-change_this_secret_in_production}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - library_net
+
+  webface:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: library_webface
+    volumes:
+      - ./frontend:/app
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost/api
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - library_net
+
+  proxy-nginx:
+    build:
+      context: ./proxy-nginx
+      dockerfile: Dockerfile
+    container_name: library_proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - webface
+    networks:
+      - library_net
+
+volumes:
+  postgres_data:
+
+networks:
+  library_net:
+    driver: bridge

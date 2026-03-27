@@ -1,0 +1,33 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\LocationController;
+use App\Http\Controllers\Api\ArchiveController;
+use App\Http\Controllers\Api\BookController;
+use App\Http\Controllers\Api\BookSearchController;
+use Illuminate\Support\Facades\Route;
+
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+Route::post('/refresh', [AuthController::class, 'refresh']);
+
+Route::middleware('auth:api')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me', [AuthController::class, 'me']);
+
+    Route::apiResource('locations', LocationController::class);
+    Route::get('/locations/{location}/archives', [ArchiveController::class, 'index']);
+    Route::post('/locations/{location}/archives', [ArchiveController::class, 'store']);
+    Route::put('/archives/{archive}', [ArchiveController::class, 'update']);
+    Route::delete('/archives/{archive}', [ArchiveController::class, 'destroy']);
+
+    Route::get('/archives/{archive}/books', [BookController::class, 'index']);
+    Route::post('/archives/{archive}/books', [BookController::class, 'store']);
+    Route::get('/books/search', [BookSearchController::class, 'search']);
+
+    // Чтобы URL `/books/search` не матчился как `/books/{book}`:
+    Route::get('/books/{book}', [BookController::class, 'show'])->whereNumber('book');
+    Route::put('/books/{book}', [BookController::class, 'update'])->whereNumber('book');
+    Route::delete('/books/{book}', [BookController::class, 'destroy'])->whereNumber('book');
+    Route::post('/books/{book}/photo', [BookController::class, 'uploadPhoto'])->whereNumber('book');
+});

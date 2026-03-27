@@ -1,0 +1,179 @@
+@import "tailwindcss";
+
+/* Design system: Библиотека-Каталогизатор */
+:root {
+  /* Цвета — тёплая книжная палитра */
+  --color-cream: #faf8f5;
+  --color-parchment: #f5f0e8;
+  --color-sand: #e8e0d5;
+  --color-ink: #2c2419;
+  --color-ink-muted: #5c5349;
+  --color-ink-light: #8a8178;
+  --color-accent: #1a5f4a;
+  --color-accent-hover: #14503f;
+  --color-accent-muted: #e8f2ef;
+  --color-border: #e0d8ce;
+  --color-border-focus: #1a5f4a;
+  --color-error: #b91c1c;
+  --color-error-bg: #fef2f2;
+}
+
+@theme inline {
+  --color-background: var(--color-cream);
+  --color-foreground: var(--color-ink);
+  --font-sans: var(--font-source-sans);
+  --font-serif: var(--font-literata);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-source-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-serif {
+  font-family: var(--font-literata), Georgia, serif;
+}
+
+/* Theme utility classes (без var(...) в JSX className) */
+.text-ink { color: var(--color-ink); }
+.text-ink-muted { color: var(--color-ink-muted); }
+.text-ink-light { color: var(--color-ink-light); }
+.text-accent { color: var(--color-accent); }
+.text-error { color: var(--color-error); }
+
+.bg-cream { background-color: var(--color-cream); }
+.bg-parchment { background-color: var(--color-parchment); }
+.bg-sand { background-color: var(--color-sand); }
+.bg-accent { background-color: var(--color-accent); }
+.bg-accent-muted { background-color: var(--color-accent-muted); }
+.bg-error { background-color: var(--color-error-bg); }
+
+.border-theme { border-color: var(--color-border); }
+
+.hover-text-accent:hover { color: var(--color-accent); }
+.hover-bg-sand:hover { background-color: var(--color-sand); }
+.hover-bg-accent-hover:hover { background-color: var(--color-accent-hover); }
+.hover-bg-accent-muted:hover { background-color: var(--color-accent-muted); }
+.hover-border-accent:hover { border-color: var(--color-accent); }
+.hover-ring-accent:hover { --tw-ring-color: var(--color-accent); }
+
+.input-file-accent::file-selector-button {
+  margin-right: 0.5rem;
+  border: 0;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: var(--color-accent-muted);
+  color: var(--color-accent);
+}
+
+/* Формы — тёмный текст на светлом фоне */
+input, textarea, select {
+  font-family: inherit;
+  color: var(--color-ink);
+  background-color: white;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-ink-light);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 2px rgba(26, 95, 74, 0.15);
+}
+
+/* Карточка: Ctrl + hover = разворот на обороте */
+.card-3d {
+  perspective: 800px;
+  border-radius: 1rem;
+  transform-origin: center;
+  transition: transform 0.2s ease;
+  will-change: transform;
+  display: block;
+}
+
+.card-3d .card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.4s ease;
+}
+
+/* Ctrl + hover — разворот на 180° */
+.ctrl-pressed .card-3d:hover .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: inherit;
+  transition: box-shadow 0.25s ease;
+}
+
+/* Общая "лицевая" поверхность карточек */
+.card-surface {
+  display: flex;
+  height: 100%;
+  cursor: pointer;
+  flex-direction: column;
+  border-radius: 1rem;
+  border: 2px solid var(--color-border);
+  background: white;
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(44, 36, 25, 0.08);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-surface:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 10px 20px -14px rgba(44, 36, 25, 0.3);
+}
+
+.card-surface--location {
+  min-height: 420px;
+}
+
+.card-surface--archive {
+  min-height: 280px;
+}
+
+.card-surface--book {
+  min-height: 320px;
+}
+
+/* Выступ вперёд при наведении */
+.card-3d:hover .card-front,
+.card-3d:hover .card-back {
+  box-shadow: 0 18px 40px -18px rgba(44, 36, 25, 0.34), 0 8px 18px -10px rgba(44, 36, 25, 0.22);
+}
+
+.card-3d:hover {
+  transform: scale(1.05);
+  z-index: 5;
+}
+
+/* Лицевая сторона — смотрит вперёд */
+.card-front {
+  transform: translateZ(0.1px);
+}
+
+/* Оборотная сторона — изначально смотрит назад (скрыта) */
+.card-back {
+  transform: rotateY(180deg) translateZ(0.1px);
+}
