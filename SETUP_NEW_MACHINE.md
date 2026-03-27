@@ -30,27 +30,15 @@ cd library-catalog/LibraryCatalog
 
 Если при клонировании в корне сразу лежат каталоги `backend/` и `frontend/` (репозиторий = только LibraryCatalog), перейдите в этот корень и не добавляйте лишний уровень `LibraryCatalog/`.
 
-Если файла `backend/.env` ещё нет, создайте его из примера (значения БД всё равно подставятся из Docker Compose, но файл нужен для `APP_KEY` и прочих настроек Laravel):
+Файл **`backend/.env`** можно не создавать вручную: при первом старте контейнера `backend` скрипт `docker-entrypoint.sh` скопирует `.env` из `.env.example` (если `.env` нет), при отсутствии `vendor/` выполнит **`composer install`**, при пустом **`APP_KEY`** — **`php artisan key:generate`**. У **фронта** при отсутствии `node_modules` выполняется **`npm install`**. Первый запуск из-за этого может занять **несколько минут** — смотрите логи: `docker compose logs -f backend webface`.
 
-```bash
-cp backend/.env.example backend/.env
-```
-
-### 2. Установка зависимостей PHP в каталог на хосте
-
-Том `./backend:/var/www/html` перезаписывает код из образа: каталог `backend/vendor` на **вашем** диске должен появиться после первой установки.
+Опционально (если хотите заранее появившийся на диске `vendor/`):
 
 ```bash
 docker compose run --rm backend composer install
 ```
 
-При необходимости повторите для чистого прод-сборочного режима (опционально):
-
-```bash
-docker compose run --rm backend composer install --no-dev --optimize-autoloader
-```
-
-### 3. Запуск стека
+### 2. Запуск стека
 
 ```bash
 docker compose up --build -d
@@ -65,27 +53,26 @@ docker compose up --build -d
 
 Для работы в браузере удобнее открывать **http://localhost** (через прокси), чтобы пути вида `/api` совпадали с настройкой `NEXT_PUBLIC_API_URL` в Compose (`http://localhost/api`).
 
-### 4. Первичная настройка Laravel в контейнере
+### 3. Первичная настройка Laravel в контейнере
 
-Выполните **один раз** после первого успешного запуска:
+Выполните **один раз** после того, как `backend` в логах перестанет падать и `php artisan serve` будет работать:
 
 ```bash
-docker compose exec backend php artisan key:generate
 docker compose exec backend php artisan jwt:secret --force
 docker compose exec backend php artisan migrate --force
 docker compose exec backend php artisan storage:link
 ```
 
-- `key:generate` — заполняет `APP_KEY` в `.env` внутри контейнера (если том с `./backend` примонтирован, ключ сохранится в `backend/.env` на хосте).
-- `jwt:secret` — секрет для JWT; в Compose уже есть `JWT_SECRET` из переменных окружения — команда приведёт `.env` в согласованный вид.
+- **`APP_KEY`** при пустом значении создаётся entrypoint’ом автоматически; при необходимости: `docker compose exec backend php artisan key:generate`.
+- `jwt:secret` — синхронизация секрета JWT с `.env` (в Compose также задаётся `JWT_SECRET`).
 - `migrate` — таблицы локаций, архивов, книг, пользователей и т.д.
 - `storage:link` — доступность загруженных обложек по `/storage/...`.
 
-### 5. Создание пользователя (регистрация)
+### 4. Создание пользователя (регистрация)
 
 Через UI на **http://localhost** (или **http://localhost:3000**, если заходите к фронту напрямую — тогда убедитесь, что `NEXT_PUBLIC_API_URL` указывает на доступный с браузера URL API) зарегистрируйте первого пользователя или используйте ваши тестовые данные.
 
-### 6. Остановка
+### 5. Остановка
 
 ```bash
 docker compose down
@@ -205,10 +192,12 @@ npm run start
 
 ## Типичные проблемы
 
-1. **401 / не логинится после переноса** — на новой машине должен быть согласован `JWT_SECRET` (и выполнен `jwt:secret` / те же переменные в Docker).
-2. **CORS** — в проекте для API настроены широкие `allowed_origins`; если сузите в `config/cors.php`, добавьте origin вашего фронта.
-3. **Фото книг не открываются** — проверьте `storage:link` и что запросы к `/storage/...` проксируются к Laravel (при Docker через Nginx это уже в `proxy-nginx/conf.d/default.conf`).
-4. **Пустой `vendor` в Docker** — всегда выполняйте `docker compose run --rm backend composer install` на новой машине до или сразу после первого `up`.
+1. **`vendor/autoload.php` не найден в контейнере `backend`** — раньше том `./backend:/var/www/html` затирал каталог `vendor` из образа; сейчас при старте выполняется `composer install`. Если ошибка осталась, смотрите логи `docker compose logs backend` и убедитесь, что образ пересобран: `docker compose build --no-cache backend`.
+2. **`next: not found` у `webface`** — то же с хостовым томом и `node_modules`; при старте выполняется `npm install`. При сбое: `docker compose build --no-cache webface` и снова `up`.
+3. **Nginx: `host not found in upstream "backend:8000"`** — имя сервиса резолвилось при загрузке конфига до старта бэкенда; в конфиге Nginx используется **Docker resolver 127.0.0.11** и **динамический `proxy_pass`**, чтобы прокси не падал при старте. Пересоберите образ прокси после обновления репозитория: `docker compose build proxy-nginx`.
+4. **401 / не логинится после переноса** — согласуйте `JWT_SECRET` и выполните `jwt:secret`.
+5. **CORS** — при сужении `allowed_origins` в `config/cors.php` добавьте origin фронта.
+6. **Фото книг не открываются** — выполните `storage:link` и проверьте проксирование `/storage` в Nginx.
 
 ---
 
