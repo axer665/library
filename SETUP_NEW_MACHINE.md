@@ -1,6 +1,6 @@
 # Развёртывание LibraryCatalog на новой машине
 
-Проект состоит из **backend** (Laravel 10, PHP 8.1+, JWT) и **frontend** (Next.js 16, Node 20+). Ниже — два варианта: через **Docker** (как в репозитории) и **без Docker**.
+Проект состоит из **backend** (Laravel 10, JWT) и **frontend** (Next.js 16, Node 20+). Локально подойдёт **PHP 8.1+** по `composer.json`; **Docker-образ backend** собран на **PHP 8.4**, чтобы совпадать с текущим `composer.lock` (часть Symfony 8.x требует PHP ≥ 8.4). Ниже — два варианта: через **Docker** и **без Docker**.
 
 Предполагается, что вы клонируете репозиторий и работаете из каталога `LibraryCatalog/` (рядом лежат `backend/`, `frontend/`, `docker-compose.yml`).
 
