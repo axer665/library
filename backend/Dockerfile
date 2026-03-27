@@ -9,7 +9,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && docker-php-ext-install pdo pdo_pgsql mbstring fileinfo \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
@@ -17,9 +16,8 @@ WORKDIR /var/www/html
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-COPY . .
-
-RUN composer update --no-dev --optimize-autoloader --no-interaction 2>/dev/null || composer install --no-dev --optimize-autoloader --no-interaction
+# Код и composer.json приходят с хоста через том ./backend:/var/www/html.
+# Установка зависимостей — в docker-entrypoint.sh (composer install при отсутствии vendor/).
 
 EXPOSE 8000
 
