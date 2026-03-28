@@ -13,6 +13,11 @@ if [ ! -f vendor/autoload.php ]; then
   composer install --no-interaction --prefer-dist
 fi
 
+# Сбросить закэшированный config (иначе после config:cache мог остаться mysql без pdo_mysql в образе)
+if [ -f vendor/autoload.php ]; then
+  php artisan config:clear --no-interaction 2>/dev/null || true
+fi
+
 if [ -f .env ] && ! grep -qE '^APP_KEY=[^[:space:]]+[[:space:]]*$' .env; then
   echo "backend: генерирую APP_KEY"
   php artisan key:generate --force --no-interaction
