@@ -26,7 +26,8 @@
    - **`NEXT_PUBLIC_API_URL`** — обычно **`/api`**, если фронт и бэкенд отдаются с одного хоста через Nginx (запросы к API идут на тот же домен). Если фронт и API на разных origin — укажите полный URL API, например `https://api.example.com/api`
    - **`SANCTUM_STATEFUL_DOMAINS`** — домен(ы) сайта без `https://`, через запятую (как в `.env.example`)
 2. Перезапустите контейнеры: `docker compose up -d` (переменные подхватятся заново). Если меняли только фронтовую публичную переменную — достаточно перезапустить сервис **`webface`**.
-3. Конфиг Nginx в репозитории слушает любой **`Host`** (`server_name _;`). Внешний TLS (Let's Encrypt) чаще делают на хосте или отдельном reverse proxy — тогда **`APP_URL`** всё равно держите **`https://…`**: Laravel учитывает `X-Forwarded-Proto` (прокси в **`TrustProxies`** помечены как доверенные).
+3. **HTTPS в Docker:** в каталог **`ssl/`** положите **`catalogbooks.crt`** и **`catalogbooks.key`** (см. [`ssl/README.md`](ssl/README.md)). Nginx слушает **80** и **443** параллельно (без принудительного редиректа на HTTPS). В **`.env`** укажите **`APP_URL`** со схемой, которой реально пользуетесь (`http://` или `https://`).
+4. Конфиг Nginx слушает любой **`Host`** (`server_name _;`). Если TLS терминируется **вне** этого compose (другой reverse proxy), при необходимости упростите `proxy-nginx/conf.d/default.conf` под свою схему.
 
 Без Docker: в **`frontend/.env.local`** задайте `NEXT_PUBLIC_API_URL`, в **`backend/.env`** — `APP_URL`.
 
