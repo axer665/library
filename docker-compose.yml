@@ -41,7 +41,8 @@ services:
       DB_DATABASE: library_catalog
       DB_USERNAME: library_user
       DB_PASSWORD: library_password
-      JWT_SECRET: ${JWT_SECRET:-change_this_secret_in_production}
+      # HS256 (Lcobucci): минимум 32 байта в строке ключа; старый дефолт был короче и давал JWTException
+      JWT_SECRET: ${JWT_SECRET:-LibraryCatalog_dev_jwt_hmac_key_at_least_32_bytes_long_ok}
     depends_on:
       postgres:
         condition: service_healthy

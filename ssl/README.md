@@ -11,4 +11,4 @@
 
 **Не коммитьте** `.key` / `.crt` в git (см. корневой `.gitignore`).
 
-Сейчас **и порт 80, и 443** отдают одно и то же приложение; **редиректа HTTP → HTTPS нет**. Позже его можно добавить отдельным `server { listen 80; return 301 https://...; }` в `proxy-nginx/conf.d/default.conf`.
+Порт **80** отвечает **301 Redirect** на **HTTPS** (`https://$host$request_uri`); приложение доступно по **443**.

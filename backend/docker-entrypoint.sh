@@ -3,6 +3,12 @@ set -e
 
 cd /var/www/html
 
+# Короткий JWT_SECRET из compose (< 32 символов) даёт «Key provided is shorter than 256 bits»
+if [ -n "${JWT_SECRET:-}" ] && [ ${#JWT_SECRET} -lt 32 ]; then
+  echo "backend: JWT_SECRET короче 32 символов — убираю из окружения (нужен длинный ключ для HS256)"
+  unset JWT_SECRET
+fi
+
 # Закэшированный config с хоста (127.0.0.1) ломает подключение к БД в контейнере
 rm -f bootstrap/cache/config.php
 
@@ -36,10 +42,14 @@ if [ -f .env ] && ! grep -qE '^APP_KEY=[^[:space:]]+[[:space:]]*$' .env; then
   php artisan key:generate --force --no-interaction
 fi
 
-# JWT: если в окружении нет секрета и в .env нет строки JWT_SECRET=… — сгенерировать (tymon/jwt-auth)
+# JWT: нет секрета в env или в .env строка короче 32 символов после «=» — сгенерировать
 if [ -f vendor/autoload.php ] && [ -f .env ]; then
-  if [ -z "${JWT_SECRET:-}" ] && ! grep -qE '^JWT_SECRET=[^[:space:]#]' .env; then
-    echo "backend: JWT_SECRET не задан — выполняю php artisan jwt:secret"
+  if [ -n "${JWT_SECRET:-}" ]; then
+    :
+  elif grep -qE '^JWT_SECRET=.{32,}' .env; then
+    :
+  else
+    echo "backend: JWT_SECRET отсутствует или короче 32 символов — выполняю php artisan jwt:secret"
     php artisan jwt:secret --force --no-interaction
   fi
 fi
