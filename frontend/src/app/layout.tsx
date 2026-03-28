@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Literata, Source_Sans_3 } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const literata = Literata({
@@ -30,6 +31,25 @@ export default function RootLayout({
         suppressHydrationWarning
         className={`${literata.variable} ${sourceSans.variable} antialiased`}
       >
+        <Script
+          id="disable-react-devtools"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+(function () {
+  if (typeof window === "undefined") return;
+  function noop() {}
+  window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+    isDisabled: true,
+    supportsFiber: true,
+    inject: noop,
+    onCommitFiberRoot: noop,
+    onCommitFiberUnmount: noop,
+    renderers: new Map(),
+  };
+})();`.trim(),
+          }}
+        />
         {children}
       </body>
     </html>
