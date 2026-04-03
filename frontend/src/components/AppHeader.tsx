@@ -6,6 +6,7 @@ import Link from "next/link";
 import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/authStore";
 import { catalogStore } from "@/stores/catalogStore";
+import { BrandLogo } from "@/components/BrandLogo";
 
 function AppHeaderInner() {
  const router = useRouter();
@@ -13,17 +14,15 @@ function AppHeaderInner() {
  const isSearch = pathname === "/dashboard/search";
  const isCatalog = !isSearch && pathname.startsWith("/dashboard");
 
- const handleLogout = () => {
-  authStore.logout();
-  router.push("/login");
-  router.refresh();
- };
+  const handleLogout = async () => {
+    await authStore.logout();
+    router.replace("/");
+    router.refresh();
+  };
 
  return (
   <header className="flex h-14 shrink-0 items-center gap-4 border-b border-theme bg-parchment px-6">
-   <h1 className="font-serif text-lg font-semibold text-ink">
-    Библиотека-Каталогизатор
-   </h1>
+   <BrandLogo href="/" compact />
    <nav className="flex gap-2">
     <Link
      href={catalogStore.lastCatalogUrl || "/dashboard"}

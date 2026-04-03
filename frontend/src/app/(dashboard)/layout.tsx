@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/authStore";
 import { useCtrlKey } from "@/hooks/useCtrlKey";
@@ -15,6 +15,7 @@ const LOADING = (
 
 function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
  const router = useRouter();
+ const pathname = usePathname();
  const [mounted, setMounted] = useState(false);
  useCtrlKey();
 
@@ -23,12 +24,14 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
  }, []);
 
  useEffect(() => {
-  if (mounted && !authStore.token) {
+  const isProtectedDashboardRoute = pathname.startsWith("/dashboard");
+  if (mounted && isProtectedDashboardRoute && !authStore.token) {
    router.replace("/login");
   }
- }, [mounted, router]);
+ }, [mounted, pathname, router]);
 
  if (!mounted) return LOADING;
+ if (!pathname.startsWith("/dashboard")) return <>{children}</>;
  if (!authStore.token) return LOADING;
 
  return (
