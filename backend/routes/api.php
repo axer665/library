@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MailTestController;
 use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\BookController;
@@ -14,6 +15,7 @@ Route::post('/refresh', [AuthController::class, 'refresh']);
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/mail/test', [MailTestController::class, 'sendTest']);
 
     Route::apiResource('locations', LocationController::class);
     Route::get('/locations/{location}/archives', [ArchiveController::class, 'index']);

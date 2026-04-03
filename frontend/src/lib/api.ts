@@ -131,6 +131,7 @@ export const api = {
       }),
     logout: () => request('/logout', { method: 'POST' }),
     me: () => request<{ id: number; name: string; email: string }>('/me'),
+    sendTestMail: () => request<{ message: string }>('/mail/test', { method: 'POST' }),
   },
   locations: {
     list: () => request<Array<{
