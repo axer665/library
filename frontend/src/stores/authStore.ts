@@ -7,6 +7,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
+  email_verified_at: string | null;
 }
 
 class AuthStore {
@@ -14,6 +15,8 @@ class AuthStore {
   token: string | null = null;
   loading = false;
   initialized = false;
+  /** Загрузка профиля с API (дашборд после F5) */
+  hydrating = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -43,6 +46,30 @@ class AuthStore {
       });
     } finally {
       runInAction(() => (this.loading = false));
+    }
+  }
+
+  async syncUserFromApi() {
+    if (!this.token) return;
+    runInAction(() => {
+      this.hydrating = true;
+    });
+    try {
+      const user = await api.auth.me();
+      runInAction(() => {
+        this.user = user;
+      });
+    } catch {
+      if (typeof window !== 'undefined' && !localStorage.getItem('token')) {
+        runInAction(() => {
+          this.token = null;
+          this.user = null;
+        });
+      }
+    } finally {
+      runInAction(() => {
+        this.hydrating = false;
+      });
     }
   }
 
@@ -98,6 +125,10 @@ class AuthStore {
 
   get isAuthenticated() {
     return !!this.token;
+  }
+
+  get isEmailVerified() {
+    return !!this.user?.email_verified_at;
   }
 }
 

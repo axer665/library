@@ -114,13 +114,19 @@ async function request<T>(
 export const api = {
   auth: {
     register: (data: { name: string; email: string; password: string; password_confirmation: string }) =>
-      request<{ user: { id: number; name: string; email: string }; access_token: string }>('/register', {
+      request<{
+        user: { id: number; name: string; email: string; email_verified_at: string | null };
+        access_token: string;
+      }>('/register', {
         method: 'POST',
         body: JSON.stringify(data),
         noAuth: true,
       }),
     login: (data: { email: string; password: string }) =>
-      request<{ user: { id: number; name: string; email: string }; access_token: string }>('/login', {
+      request<{
+        user: { id: number; name: string; email: string; email_verified_at: string | null };
+        access_token: string;
+      }>('/login', {
         method: 'POST',
         body: JSON.stringify(data),
         noAuth: true,
@@ -130,7 +136,10 @@ export const api = {
         method: 'POST',
       }),
     logout: () => request('/logout', { method: 'POST' }),
-    me: () => request<{ id: number; name: string; email: string }>('/me'),
+    me: () =>
+      request<{ id: number; name: string; email: string; email_verified_at: string | null }>('/me'),
+    resendVerification: () =>
+      request<{ message: string }>('/email/resend', { method: 'POST' }),
     sendTestMail: () => request<{ message: string }>('/mail/test', { method: 'POST' }),
   },
   locations: {

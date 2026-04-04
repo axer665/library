@@ -12,9 +12,18 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/refresh', [AuthController::class, 'refresh']);
 
+Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
+    ->middleware(['signed', 'throttle:6,1'])
+    ->name('verification.verify');
+
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
+    Route::post('/email/resend', [AuthController::class, 'resendVerification'])
+        ->middleware('throttle:6,1');
+});
+
+Route::middleware(['auth:api', 'verified'])->group(function () {
     Route::post('/mail/test', [MailTestController::class, 'sendTest']);
 
     Route::apiResource('locations', LocationController::class);

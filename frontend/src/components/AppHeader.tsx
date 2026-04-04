@@ -46,47 +46,55 @@ function AppHeaderInner() {
     }
   };
 
+ const verified = authStore.isEmailVerified;
+
  return (
   <header className="flex h-14 shrink-0 items-center gap-4 border-b border-theme bg-parchment px-6">
    <BrandLogo href="/" compact />
-   <button
-    type="button"
-    disabled={mailSending}
-    onClick={handleTestMail}
-    className="shrink-0 rounded-lg border border-theme bg-white px-3 py-1.5 text-xs font-medium text-ink transition hover-border-accent hover:bg-accent-muted disabled:opacity-50"
-    title="Отправить тестовое письмо на ваш email (проверка SMTP)"
-   >
-    {mailSending ? "Отправка…" : "Тест почты"}
-   </button>
-   {mailHint && (
-    <span className="hidden max-w-[220px] truncate text-xs text-ink-muted sm:inline" role="status">
-     {mailHint}
-    </span>
+   {verified && (
+    <>
+     <button
+      type="button"
+      disabled={mailSending}
+      onClick={handleTestMail}
+      className="shrink-0 rounded-lg border border-theme bg-white px-3 py-1.5 text-xs font-medium text-ink transition hover-border-accent hover:bg-accent-muted disabled:opacity-50"
+      title="Отправить тестовое письмо на ваш email (проверка SMTP)"
+     >
+      {mailSending ? "Отправка…" : "Тест почты"}
+     </button>
+     {mailHint && (
+      <span className="hidden max-w-[220px] truncate text-xs text-ink-muted sm:inline" role="status">
+       {mailHint}
+      </span>
+     )}
+    </>
    )}
-   <nav className="flex gap-2">
-    <Link
-     href={catalogStore.lastCatalogUrl || "/dashboard"}
-     aria-current={isCatalog ? "page" : undefined}
-     className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-      isCatalog
-       ? "bg-accent-muted text-accent"
-       : "text-ink-muted hover:bg-sand"
-     }`}
-    >
-     Каталог
-    </Link>
-    <Link
-     href="/dashboard/search"
-     aria-current={isSearch ? "page" : undefined}
-     className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-      isSearch
-       ? "bg-accent-muted text-accent"
-       : "text-ink-muted hover:bg-sand"
-     }`}
-    >
-     Поиск
-    </Link>
-   </nav>
+   {verified && (
+    <nav className="flex gap-2">
+     <Link
+      href={catalogStore.lastCatalogUrl || "/dashboard"}
+      aria-current={isCatalog ? "page" : undefined}
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+       isCatalog
+        ? "bg-accent-muted text-accent"
+        : "text-ink-muted hover:bg-sand"
+      }`}
+     >
+      Каталог
+     </Link>
+     <Link
+      href="/dashboard/search"
+      aria-current={isSearch ? "page" : undefined}
+      className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+       isSearch
+        ? "bg-accent-muted text-accent"
+        : "text-ink-muted hover:bg-sand"
+      }`}
+     >
+      Поиск
+     </Link>
+    </nav>
+   )}
    <div className="flex flex-1 items-center justify-end gap-4">
     <span className="text-sm text-ink-muted">
      {authStore.user?.name}

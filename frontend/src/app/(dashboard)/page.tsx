@@ -29,6 +29,16 @@ export default function HomePage() {
     }
   }, [searchParams]);
 
+  useEffect(() => {
+    if (searchParams.get("email_verified") !== "1") return;
+    if (typeof window === "undefined" || !localStorage.getItem("token")) return;
+    void (async () => {
+      await authStore.syncUserFromApi();
+      router.replace("/dashboard");
+      router.refresh();
+    })();
+  }, [searchParams, router]);
+
   const closeModal = () => {
     setAuthMode(null);
     setError("");

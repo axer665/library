@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -25,6 +27,8 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
+
+        $user->sendEmailVerificationNotification();
 
         $token = auth('api')->login($user);
 
@@ -86,5 +90,47 @@ class AuthController extends Controller
         } catch (Throwable $e) {
             return response()->json(['message' => 'Unable to refresh token'], 401);
         }
+    }
+
+    /**
+     * Подписанная ссылка из письма; ведёт на API, затем редирект на SPA.
+     */
+    public function verifyEmail(Request $request, int $id, string $hash): RedirectResponse
+    {
+        $user = User::findOrFail($id);
+
+        if (! hash_equals((string) $hash, sha1($user->getEmailForVerification()))) {
+            abort(403, 'Неверная или устаревшая ссылка подтверждения.');
+        }
+
+        if ($user->hasVerifiedEmail()) {
+            return redirect()->away($this->frontendSuccessUrl());
+        }
+
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
+        }
+
+        return redirect()->away($this->frontendSuccessUrl());
+    }
+
+    public function resendVerification(Request $request): JsonResponse
+    {
+        $user = $request->user();
+
+        if ($user->hasVerifiedEmail()) {
+            return response()->json(['message' => 'Адрес email уже подтверждён.']);
+        }
+
+        $user->sendEmailVerificationNotification();
+
+        return response()->json(['message' => 'Мы отправили письмо со ссылкой ещё раз.']);
+    }
+
+    private function frontendSuccessUrl(): string
+    {
+        $base = rtrim((string) config('app.frontend_url'), '/');
+
+        return $base.'/?email_verified=1';
     }
 }
