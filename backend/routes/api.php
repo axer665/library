@@ -13,7 +13,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/refresh', [AuthController::class, 'refresh']);
 
 Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])
-    ->middleware('throttle:forgot-password');
+    ->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->middleware('throttle:6,1');
 

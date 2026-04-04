@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class PasswordResetController extends Controller
 {
@@ -18,7 +20,19 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => 'required|email']);
 
-        Password::sendResetLink($request->only('email'));
+        try {
+            Password::sendResetLink($request->only('email'));
+        } catch (Throwable $e) {
+            Log::error('Forgot password: send reset link failed', [
+                'email' => $request->input('email'),
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Сейчас не удалось отправить письмо. Попробуйте позже. Если ошибка повторяется, проверьте логи сервера и настройки SMTP (MAIL_*) в .env.',
+            ], 503);
+        }
 
         return response()->json([
             'message' => 'Если указанный email зарегистрирован, мы отправили письмо со ссылкой для сброса пароля.',
