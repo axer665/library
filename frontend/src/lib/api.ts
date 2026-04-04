@@ -140,7 +140,23 @@ export const api = {
       request<{ id: number; name: string; email: string; email_verified_at: string | null }>('/me'),
     resendVerification: () =>
       request<{ message: string }>('/email/resend', { method: 'POST' }),
-    sendTestMail: () => request<{ message: string }>('/mail/test', { method: 'POST' }),
+    forgotPassword: (data: { email: string }) =>
+      request<{ message: string }>('/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        noAuth: true,
+      }),
+    resetPassword: (data: {
+      email: string;
+      token: string;
+      password: string;
+      password_confirmation: string;
+    }) =>
+      request<{ message: string }>('/reset-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        noAuth: true,
+      }),
   },
   locations: {
     list: () => request<Array<{

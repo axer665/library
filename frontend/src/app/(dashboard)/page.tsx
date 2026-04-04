@@ -3,15 +3,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { authStore } from "@/stores/authStore";
+import { api } from "@/lib/api";
 import { Modal } from "@/components/Modal";
 import { BrandLogo } from "@/components/BrandLogo";
 
 export default function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [authMode, setAuthMode] = useState<"login" | "register" | null>(null);
+  const [authMode, setAuthMode] = useState<"login" | "register" | "forgot" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotSent, setForgotSent] = useState(false);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
     name: "",
@@ -22,10 +25,12 @@ export default function HomePage() {
 
   useEffect(() => {
     const mode = searchParams.get("auth");
-    if (mode === "login" || mode === "register") {
+    if (mode === "login" || mode === "register" || mode === "forgot") {
       setAuthMode(mode);
+      if (mode !== "forgot") setForgotSent(false);
     } else {
       setAuthMode(null);
+      setForgotSent(false);
     }
   }, [searchParams]);
 
@@ -42,13 +47,15 @@ export default function HomePage() {
   const closeModal = () => {
     setAuthMode(null);
     setError("");
+    setForgotSent(false);
     router.replace("/");
   };
 
-  const title = useMemo(
-    () => (authMode === "register" ? "Регистрация" : "Вход в каталог"),
-    [authMode],
-  );
+  const title = useMemo(() => {
+    if (authMode === "register") return "Регистрация";
+    if (authMode === "forgot") return "Восстановление пароля";
+    return "Вход в каталог";
+  }, [authMode]);
 
   const onLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +87,21 @@ export default function HomePage() {
       router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Ошибка регистрации";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onForgotSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await api.auth.forgotPassword({ email: forgotEmail });
+      setForgotSent(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Не удалось отправить письмо";
       setError(msg);
     } finally {
       setLoading(false);
@@ -263,6 +285,21 @@ export default function HomePage() {
               >
                 {loading ? "Вход..." : "Войти"}
               </button>
+              <p className="text-center text-sm">
+                <button
+                  type="button"
+                  className="font-medium text-accent hover:underline"
+                  onClick={() => {
+                    setError("");
+                    setForgotSent(false);
+                    setForgotEmail(loginForm.email);
+                    setAuthMode("forgot");
+                    router.replace("/?auth=forgot");
+                  }}
+                >
+                  Забыли пароль?
+                </button>
+              </p>
               <p className="text-center text-sm text-ink-muted">
                 Нет аккаунта?{" "}
                 <button
@@ -271,12 +308,70 @@ export default function HomePage() {
                   onClick={() => {
                     setError("");
                     setAuthMode("register");
+                    router.replace("/?auth=register");
                   }}
                 >
                   Зарегистрироваться
                 </button>
               </p>
             </form>
+          ) : authMode === "forgot" ? (
+            forgotSent ? (
+              <div className="space-y-4 text-sm text-ink-muted">
+                <p>
+                  Если указанный email зарегистрирован, мы отправили письмо со ссылкой для сброса пароля.
+                  Проверьте входящие и папку «Спам».
+                </p>
+                <button
+                  type="button"
+                  className="w-full rounded-lg border border-theme px-4 py-2 font-medium text-ink transition hover-bg-sand"
+                  onClick={() => {
+                    setError("");
+                    setForgotSent(false);
+                    setAuthMode("login");
+                    router.replace("/?auth=login");
+                  }}
+                >
+                  Вернуться ко входу
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={onForgotSubmit} className="space-y-4">
+                <p className="text-sm text-ink-muted">
+                  Укажите email аккаунта — пришлём ссылку для задания нового пароля.
+                </p>
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-ink">Email</label>
+                  <input
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
+                    required
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full rounded-lg bg-accent px-4 py-2 font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
+                >
+                  {loading ? "Отправка…" : "Отправить ссылку"}
+                </button>
+                <p className="text-center text-sm text-ink-muted">
+                  <button
+                    type="button"
+                    className="font-medium text-accent hover:underline"
+                    onClick={() => {
+                      setError("");
+                      setAuthMode("login");
+                      router.replace("/?auth=login");
+                    }}
+                  >
+                    Назад ко входу
+                  </button>
+                </p>
+              </form>
+            )
           ) : (
             <form onSubmit={onRegisterSubmit} className="space-y-4">
               <div>
@@ -337,6 +432,7 @@ export default function HomePage() {
                   onClick={() => {
                     setError("");
                     setAuthMode("login");
+                    router.replace("/?auth=login");
                   }}
                 >
                   Войти
