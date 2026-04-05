@@ -25,6 +25,9 @@ export default function LocationArchiveBooksRoutePage({
 
   useEffect(() => {
     if (!Number.isFinite(locationId) || !Number.isFinite(archiveId)) return;
+
+    catalogStore.clearCatalogTransitionPending();
+
     const key = `books:${locationId}:${archiveId}`;
     if (lastKeyRef.current === key) return;
     lastKeyRef.current = key;

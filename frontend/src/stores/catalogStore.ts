@@ -70,6 +70,8 @@ class CatalogStore {
   loading = false;
   searchLoading = false;
   lastCatalogUrl = "/dashboard";
+  /** Между кликом по крошкам и сменой URL списки могут быть пустыми — не показывать пустые заглушки. */
+  catalogTransitionPending = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -129,9 +131,16 @@ class CatalogStore {
     this.lastCatalogUrl = url;
   }
 
+  clearCatalogTransitionPending() {
+    runInAction(() => {
+      this.catalogTransitionPending = false;
+    });
+  }
+
   /** Сброс выбора перед переходом на /dashboard (без глобального loading — его выставит loadLocations). */
   beginNavigateToDashboard() {
     runInAction(() => {
+      this.catalogTransitionPending = true;
       this.selectedLocationId = null;
       this.selectedArchiveId = null;
       this.archives = [];
@@ -142,6 +151,7 @@ class CatalogStore {
   /** Переход к списку архивов: сброс книг/архива без глобального loading (оверлей — только routeLoading). */
   beginNavigateToArchivesList() {
     runInAction(() => {
+      this.catalogTransitionPending = true;
       this.selectedArchiveId = null;
       this.books = [];
     });

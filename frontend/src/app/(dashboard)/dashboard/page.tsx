@@ -41,6 +41,9 @@ function DashboardPage({
  useEffect(() => {
   // Если мы пришли на /dashboard/locations/:id/... — загрузку сделают route-обёртки.
   if (forceView && forceView !== "locations") return;
+
+  catalogStore.clearCatalogTransitionPending();
+
   if (!forceView) catalogStore.setLastCatalogUrl("/dashboard");
   if (startedRef.current) return;
   startedRef.current = true;
@@ -185,7 +188,12 @@ function DashboardPage({
   <>
    <MainContent
     view={mainView}
-    loading={catalogStore.loading || isRouteLoading || initialLoading}
+    loading={
+     catalogStore.loading ||
+     isRouteLoading ||
+     initialLoading ||
+     catalogStore.catalogTransitionPending
+    }
     locations={catalogStore.locations}
     archives={catalogStore.archives}
     books={catalogStore.books}

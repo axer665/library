@@ -22,6 +22,9 @@ export default function LocationArchivesRoutePage({
 
   useEffect(() => {
     if (!Number.isFinite(locationId)) return;
+
+    catalogStore.clearCatalogTransitionPending();
+
     const key = `archives:${locationId}`;
     if (lastKeyRef.current === key) return;
     lastKeyRef.current = key;

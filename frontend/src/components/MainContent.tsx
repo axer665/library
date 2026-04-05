@@ -58,10 +58,10 @@ export function MainContent({
  const showBlockingLoading = loading && !hasMeaningfulList;
 
  const showEmptyAddLocations =
-  view === "locations" && !showBlockingLoading && locations.length === 0;
+  view === "locations" && !loading && locations.length === 0;
  const showEmptyAddArchives =
-  view === "archives" && !showBlockingLoading && archives.length === 0;
- const showEmptyAddBook = view === "books" && !showBlockingLoading && books.length === 0;
+  view === "archives" && !loading && archives.length === 0;
+ const showEmptyAddBook = view === "books" && !loading && books.length === 0;
 
  const headerAction =
   view === "locations" ? (
