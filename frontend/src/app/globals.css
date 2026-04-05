@@ -254,6 +254,31 @@ input:focus, textarea:focus, select:focus {
     border-radius: 0 14px 14px 0;
   }
 
+  /* Карточка книги — компактная строка: обложка слева, текст справа */
+  .book-card__inner {
+    min-height: 100px;
+  }
+
+  .book-card .card-surface--book.card-front {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .book-card__media {
+    min-height: 90px;
+    flex: 0 0 90px;
+    width: 90px;
+    align-self: stretch;
+    border-radius: 14px 0 0 14px;
+  }
+
+  .book-card__content {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    border-radius: 0 14px 14px 0;
+  }
+
   /* Скелетон архивов — под компактную карточку (рядом с карточкой архива) */
   .content-skeleton__card--archives {
     display: flex;
@@ -280,22 +305,31 @@ input:focus, textarea:focus, select:focus {
     display: none;
   }
 
-  /* Скелетон книг на узких экранах */
+  /* Скелетон книг — как компактная book-card */
   .content-skeleton__card--books {
-    min-height: 300px;
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100px;
   }
 
   .content-skeleton__card--books .content-skeleton__head {
-    min-height: 4.5rem;
-  }
-
-  .content-skeleton__card--books .content-skeleton__thumbs {
-    margin-top: 0.75rem;
+    min-height: 90px;
+    flex: 0 0 90px;
+    width: 90px;
+    border-radius: 14px 0 0 14px;
   }
 
   .content-skeleton__card--books .content-skeleton__body {
-    gap: 0.75rem;
-    padding: 1rem;
+    flex: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    justify-content: center;
+  }
+
+  .content-skeleton__card--books .content-skeleton__thumbs {
+    display: none;
   }
 
   /* Сетка карточек и скелетона — одинаковые отступы на узком экране */
