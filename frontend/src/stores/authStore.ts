@@ -71,6 +71,14 @@ class AuthStore {
     });
   }
 
+  async updatePassword(data: {
+    current_password: string;
+    password: string;
+    password_confirmation: string;
+  }) {
+    await api.auth.updatePassword(data);
+  }
+
   async login(email: string, password: string) {
     this.loading = true;
     try {

@@ -86,6 +86,27 @@ class AuthController extends Controller
         return response()->json($user);
     }
 
+    public function updatePassword(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = auth('api')->user();
+
+        if (! Hash::check($data['current_password'], $user->getAuthPassword())) {
+            throw ValidationException::withMessages([
+                'current_password' => ['Неверный текущий пароль.'],
+            ]);
+        }
+
+        $user->password = $data['password'];
+        $user->save();
+
+        return response()->json(['message' => 'Пароль обновлён.']);
+    }
+
     public function refresh(Request $request): JsonResponse
     {
         try {

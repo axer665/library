@@ -143,6 +143,15 @@ export const api = {
         method: 'PUT',
         body: JSON.stringify(data),
       }),
+    updatePassword: (data: {
+      current_password: string;
+      password: string;
+      password_confirmation: string;
+    }) =>
+      request<{ message: string }>('/me/password', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
     resendVerification: () =>
       request<{ message: string }>('/email/resend', { method: 'POST' }),
     forgotPassword: (data: { email: string }) =>
