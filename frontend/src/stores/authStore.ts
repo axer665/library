@@ -64,6 +64,13 @@ class AuthStore {
     }
   }
 
+  async updateProfile(name: string) {
+    const user = await api.auth.updateProfile({ name });
+    runInAction(() => {
+      this.user = user;
+    });
+  }
+
   async login(email: string, password: string) {
     this.loading = true;
     try {

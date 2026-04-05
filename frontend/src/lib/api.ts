@@ -138,6 +138,11 @@ export const api = {
     logout: () => request('/logout', { method: 'POST' }),
     me: () =>
       request<{ id: number; name: string; email: string; email_verified_at: string | null }>('/me'),
+    updateProfile: (data: { name: string }) =>
+      request<{ id: number; name: string; email: string; email_verified_at: string | null }>('/me', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
     resendVerification: () =>
       request<{ message: string }>('/email/resend', { method: 'POST' }),
     forgotPassword: (data: { email: string }) =>
