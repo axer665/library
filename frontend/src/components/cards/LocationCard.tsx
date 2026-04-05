@@ -111,7 +111,7 @@ export function LocationCard({ location, onClick, onArchiveClick, onEdit }: Loca
 
  return (
   <div className="location-card card-3d relative">
-   <div className="location-card__inner card-inner h-full rounded-2xl">
+   <div className="location-card__inner card-inner rounded-2xl">
     <div
      role={onClick ? "button" : undefined}
      tabIndex={onClick ? 0 : undefined}

@@ -42,7 +42,7 @@ interface ArchiveCardProps {
 export function ArchiveCard({ archive, onClick, onEdit }: ArchiveCardProps) {
  return (
   <div className="archive-card card-3d relative">
-   <div className="archive-card__inner card-inner h-full rounded-2xl">
+   <div className="archive-card__inner card-inner rounded-2xl">
     <div
      role={onClick ? "button" : undefined}
      tabIndex={onClick ? 0 : undefined}

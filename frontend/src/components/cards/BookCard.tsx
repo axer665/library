@@ -51,7 +51,7 @@ export function BookCard({ book, onClick, onEdit }: BookCardProps) {
 
  return (
   <div className="book-card card-3d relative">
-   <div className="book-card__inner card-inner h-full rounded-2xl">
+   <div className="book-card__inner card-inner rounded-2xl">
     <div
      role="button"
      tabIndex={0}

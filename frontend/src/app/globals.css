@@ -110,6 +110,16 @@ input:focus, textarea:focus, select:focus {
   transition: transform 0.4s ease;
 }
 
+/*
+ * Лицевая/оборотная стороны — position:absolute, в потоке высоты нет.
+ * height:100% на .card-inner при неявной высоте родителя в grid даёт 0px → карточки накладываются.
+ */
+.card-3d.location-card .card-inner,
+.card-3d.archive-card .card-inner,
+.card-3d.book-card .card-inner {
+  height: auto;
+}
+
 /* Ctrl + hover — разворот на 180° */
 .ctrl-pressed .card-3d:hover .card-inner {
   transform: rotateY(180deg);
