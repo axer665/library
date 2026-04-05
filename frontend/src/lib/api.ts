@@ -281,7 +281,13 @@ export const api = {
           annotation?: string;
           year?: number;
           photo_path?: string;
-          archive?: { location?: { name: string }; name?: string };
+          archive_id?: number;
+          archive?: {
+            id?: number;
+            name?: string;
+            location_id?: number;
+            location?: { id?: number; name?: string };
+          };
         }>;
         meta: {
           current_page: number;

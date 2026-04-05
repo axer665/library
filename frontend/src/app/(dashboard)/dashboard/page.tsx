@@ -7,6 +7,7 @@ import { MainContent } from "@/components/MainContent";
 import { Modal } from "@/components/Modal";
 import { catalogStore } from "@/stores/catalogStore";
 import type { Location, Archive, Book } from "@/stores/catalogStore";
+import { api } from "@/lib/api";
 
 function DashboardPage({
  forceView,
@@ -30,6 +31,10 @@ function DashboardPage({
  const [editingLocation, setEditingLocation] = useState<Location | null>(null);
  const [editingArchive, setEditingArchive] = useState<Archive | null>(null);
  const [editingBook, setEditingBook] = useState<Book | null>(null);
+ const [editArchiveLocationId, setEditArchiveLocationId] = useState<number | null>(null);
+ const [bookEditLocationId, setBookEditLocationId] = useState<number | null>(null);
+ const [bookEditArchiveId, setBookEditArchiveId] = useState<number | null>(null);
+ const [bookEditArchivesList, setBookEditArchivesList] = useState<Archive[]>([]);
 
  // Скелетон только если списка локаций ещё нет (первый заход / F5). При возврате из поиска — без мерцания.
  const [initialLoading, setInitialLoading] = useState(() => {
@@ -80,6 +85,7 @@ function DashboardPage({
  const handleAddArchive = () => {
   setArchiveName("");
   setEditingArchive(null);
+  setEditArchiveLocationId(null);
   setModal("archive");
  };
 
@@ -98,6 +104,7 @@ function DashboardPage({
  const handleEditArchive = (arch: Archive) => {
   setEditingArchive(arch);
   setArchiveName(arch.name);
+  setEditArchiveLocationId(catalogStore.selectedLocationId ?? null);
   setModal("editArchive");
  };
 
@@ -111,8 +118,27 @@ function DashboardPage({
    year: book.year ? String(book.year) : "",
    photo: null,
   });
+  const locId = catalogStore.selectedLocationId;
+  const archId = catalogStore.selectedArchiveId;
+  setBookEditLocationId(locId);
+  setBookEditArchiveId(archId);
+  setBookEditArchivesList(locId ? catalogStore.archives : []);
   setModal("editBook");
  };
+
+ useEffect(() => {
+  if (modal !== "editBook" || !bookEditLocationId) {
+   if (modal !== "editBook") setBookEditArchivesList([]);
+   return;
+  }
+  let cancelled = false;
+  void api.archives.list(bookEditLocationId).then((list) => {
+   if (!cancelled) setBookEditArchivesList(list);
+  });
+  return () => {
+   cancelled = true;
+  };
+ }, [modal, bookEditLocationId]);
 
  const submitLocation = async () => {
   const name = locationName.trim();
@@ -128,12 +154,28 @@ function DashboardPage({
 
  const submitArchive = async () => {
   const name = archiveName.trim();
-  if (!name || !catalogStore.selectedLocationId) return;
   if (editingArchive) {
-   await catalogStore.updateArchive(editingArchive.id, { name });
-  } else {
-   await catalogStore.createArchive(catalogStore.selectedLocationId, name);
+   if (!name) return;
+   const curLoc = catalogStore.selectedLocationId;
+   const payload: { name: string; location_id?: number } = { name };
+   if (
+    editArchiveLocationId != null &&
+    curLoc != null &&
+    editArchiveLocationId !== curLoc
+   ) {
+    payload.location_id = editArchiveLocationId;
+   }
+   await catalogStore.updateArchive(editingArchive.id, payload);
+   setModal(null);
+   setEditingArchive(null);
+   setEditArchiveLocationId(null);
+   if (payload.location_id !== undefined) {
+    router.push(`/dashboard/locations/${payload.location_id}/archives`);
+   }
+   return;
   }
+  if (!name || !catalogStore.selectedLocationId) return;
+  await catalogStore.createArchive(catalogStore.selectedLocationId, name);
   setModal(null);
   setEditingArchive(null);
  };
@@ -142,14 +184,50 @@ function DashboardPage({
   const { author, title, publisher, annotation, year, photo } = bookForm;
   if (!author.trim() || !title.trim() || !publisher.trim()) return;
   if (editingBook && catalogStore.selectedArchiveId) {
-   await catalogStore.updateBook(editingBook.id, {
+   if (bookEditArchiveId == null || bookEditLocationId == null) return;
+   const payload: {
+    author: string;
+    title: string;
+    publisher: string;
+    annotation?: string;
+    year?: number;
+    archive_id?: number;
+   } = {
     author: author.trim(),
     title: title.trim(),
     publisher: publisher.trim(),
     annotation: annotation.trim() || undefined,
     year: year ? parseInt(year, 10) : undefined,
-   });
+   };
+   let move:
+    | {
+      fromArchiveId: number;
+      fromLocationId?: number;
+      toArchiveId: number;
+      toLocationId?: number;
+     }
+    | undefined;
+   if (bookEditArchiveId !== catalogStore.selectedArchiveId) {
+    payload.archive_id = bookEditArchiveId;
+    move = {
+     fromArchiveId: catalogStore.selectedArchiveId,
+     fromLocationId: catalogStore.selectedLocationId ?? undefined,
+     toArchiveId: bookEditArchiveId,
+     toLocationId: bookEditLocationId,
+    };
+   }
+   await catalogStore.updateBook(editingBook.id, payload, move);
    if (photo) await catalogStore.uploadBookPhoto(editingBook.id, photo);
+   setModal(null);
+   setEditingBook(null);
+   setBookEditLocationId(null);
+   setBookEditArchiveId(null);
+   if (move) {
+    router.push(
+     `/dashboard/locations/${bookEditLocationId}/archives/${bookEditArchiveId}`,
+    );
+   }
+   return;
   } else if (!editingBook && catalogStore.selectedArchiveId) {
    const book = await catalogStore.createBook(catalogStore.selectedArchiveId, {
     author: author.trim(),
@@ -162,6 +240,8 @@ function DashboardPage({
   }
   setModal(null);
   setEditingBook(null);
+  setBookEditLocationId(null);
+  setBookEditArchiveId(null);
  };
 
  const selectedLocationName = catalogStore.selectedLocationId
@@ -269,9 +349,33 @@ function DashboardPage({
      onClose={() => {
       setModal(null);
       setEditingArchive(null);
+      setEditArchiveLocationId(null);
      }}
     >
      <div className="space-y-4">
+      {editingArchive && (
+       <div>
+        <label className="mb-1 block text-sm font-medium text-ink-muted">
+         Локация
+        </label>
+        <select
+         value={editArchiveLocationId ?? ""}
+         onChange={(e) =>
+          setEditArchiveLocationId(e.target.value ? Number(e.target.value) : null)
+         }
+         className="w-full rounded-lg border border-theme px-3 py-2 text-sm text-ink"
+        >
+         {catalogStore.locations.map((loc) => (
+          <option key={loc.id} value={loc.id}>
+           {loc.name}
+          </option>
+         ))}
+        </select>
+        <p className="mt-1 text-xs text-ink-muted">
+         Можно перенести архив в другую локацию вместе со всеми книгами.
+        </p>
+       </div>
+      )}
       <div>
        <label className="mb-1 block text-sm font-medium text-ink">Название</label>
        <input
@@ -280,14 +384,17 @@ function DashboardPage({
         onChange={(e) => setArchiveName(e.target.value)}
         placeholder="Например: Художественная литература"
         className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
-        autoFocus
+        autoFocus={!editingArchive}
         onKeyDown={(e) => e.key === "Enter" && submitArchive()}
        />
       </div>
       <div className="flex gap-2">
        <button
         onClick={submitArchive}
-        disabled={!archiveName.trim()}
+        disabled={
+         !archiveName.trim() ||
+         (!!editingArchive && editArchiveLocationId === null)
+        }
         className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
        >
         {editingArchive ? "Сохранить" : "Создать"}
@@ -309,6 +416,9 @@ function DashboardPage({
      onClose={() => {
       setModal(null);
       setEditingBook(null);
+      setBookEditLocationId(null);
+      setBookEditArchiveId(null);
+      setBookEditArchivesList([]);
      }}
     >
      <form
@@ -318,6 +428,58 @@ function DashboardPage({
       }}
       className="space-y-4"
      >
+      {editingBook && (
+       <>
+        <div>
+         <label className="mb-1 block text-sm font-medium text-ink-muted">
+          Локация
+         </label>
+         <select
+          value={bookEditLocationId ?? ""}
+          onChange={(e) => {
+           const v = e.target.value ? Number(e.target.value) : null;
+           setBookEditLocationId(v);
+           setBookEditArchiveId(null);
+          }}
+          className="w-full rounded-lg border border-theme px-3 py-2 text-sm text-ink"
+         >
+          <option value="" disabled>
+           Выберите локацию
+          </option>
+          {catalogStore.locations.map((loc) => (
+           <option key={loc.id} value={loc.id}>
+            {loc.name}
+           </option>
+          ))}
+         </select>
+        </div>
+        <div>
+         <label className="mb-1 block text-sm font-medium text-ink-muted">
+          Архив
+         </label>
+         <select
+          value={bookEditArchiveId ?? ""}
+          onChange={(e) =>
+           setBookEditArchiveId(e.target.value ? Number(e.target.value) : null)
+          }
+          className="w-full rounded-lg border border-theme px-3 py-2 text-sm text-ink"
+          disabled={!bookEditLocationId || bookEditArchivesList.length === 0}
+         >
+          <option value="" disabled>
+           {bookEditArchivesList.length === 0 ? "Нет архивов" : "Выберите архив"}
+          </option>
+          {bookEditArchivesList.map((a) => (
+           <option key={a.id} value={a.id}>
+            {a.name}
+           </option>
+          ))}
+         </select>
+         <p className="mt-1 text-xs text-ink-muted">
+          Книгу можно перенести в другой архив (в той же или другой локации).
+         </p>
+        </div>
+       </>
+      )}
       <div>
        <label className="mb-1 block text-sm font-medium text-ink">Автор *</label>
        <input
@@ -390,7 +552,15 @@ function DashboardPage({
       <div className="flex gap-2">
        <button
         type="submit"
-        disabled={!bookForm.author.trim() || !bookForm.title.trim() || !bookForm.publisher.trim()}
+        disabled={
+         !bookForm.author.trim() ||
+         !bookForm.title.trim() ||
+         !bookForm.publisher.trim() ||
+         (!!editingBook &&
+          (bookEditArchiveId === null ||
+           bookEditLocationId === null ||
+           bookEditArchivesList.length === 0))
+        }
         className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
        >
         {editingBook ? "Сохранить" : "Создать"}

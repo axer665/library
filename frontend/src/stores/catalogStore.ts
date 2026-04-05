@@ -36,7 +36,13 @@ export interface Book {
   annotation?: string;
   year?: number;
   photo_path?: string;
-  archive?: { location?: { name: string } };
+  archive_id?: number;
+  archive?: {
+    id?: number;
+    name?: string;
+    location_id?: number;
+    location?: { id?: number; name?: string };
+  };
 }
 
 export interface SearchFilters {
@@ -277,14 +283,178 @@ class CatalogStore {
     });
   }
 
-  async updateArchive(id: number, data: { name?: string; location_id?: number }) {
-    await api.archives.update(id, data);
-    await this.loadArchives(this.selectedLocationId!);
+  private removeBookFromLocationArchivePreview(
+    locationId: number,
+    archiveId: number,
+    bookId: number,
+  ) {
+    const li = this.locations.findIndex((l) => l.id === locationId);
+    if (li < 0) return;
+    const loc = this.locations[li];
+    const next = loc.archives?.map((ar) => {
+      if (ar.id !== archiveId) return ar;
+      return { ...ar, books: (ar.books ?? []).filter((b) => b.id !== bookId) };
+    });
+    if (next) this.locations[li] = { ...loc, archives: next };
   }
 
-  async updateBook(id: number, data: Record<string, unknown>) {
+  private addBookToLocationArchivePreview(
+    locationId: number,
+    archiveId: number,
+    preview: BookPreview,
+  ) {
+    const li = this.locations.findIndex((l) => l.id === locationId);
+    if (li < 0) return;
+    const loc = this.locations[li];
+    if (!(loc.archives ?? []).some((a) => a.id === archiveId)) return;
+    const next = loc.archives?.map((ar) => {
+      if (ar.id !== archiveId) return ar;
+      const books = [preview, ...(ar.books ?? []).filter((b) => b.id !== preview.id)].slice(0, 5);
+      return { ...ar, books };
+    });
+    if (next) this.locations[li] = { ...loc, archives: next };
+  }
+
+  async updateArchive(id: number, data: { name?: string; location_id?: number }) {
+    const oldLocId = this.selectedLocationId;
+    const archRow = this.archives.find((a) => a.id === id);
+    const updated = (await api.archives.update(id, data)) as { id: number; name: string };
+    const targetLocId = data.location_id;
+    const moved =
+      targetLocId !== undefined && oldLocId != null && targetLocId !== oldLocId;
+    const nameFinal = data.name ?? archRow?.name ?? updated.name;
+
+    runInAction(() => {
+      if (moved && oldLocId != null) {
+        const oldLocIdx = this.locations.findIndex((l) => l.id === oldLocId);
+        if (oldLocIdx >= 0) {
+          const loc = this.locations[oldLocIdx];
+          const prevArch = (loc.archives ?? []).find((a) => a.id === id);
+          const nextArchives = (loc.archives ?? []).filter((a) => a.id !== id);
+          const nextCount = Math.max(0, (loc.archives_count ?? loc.archives?.length ?? 0) - 1);
+          this.locations[oldLocIdx] = {
+            ...loc,
+            archives: nextArchives,
+            archives_count: nextCount,
+          };
+
+          const newLocIdx = this.locations.findIndex((l) => l.id === targetLocId!);
+          if (newLocIdx >= 0) {
+            const nloc = this.locations[newLocIdx];
+            const preview: ArchivePreview = {
+              id,
+              name: nameFinal,
+              books: prevArch?.books ?? [],
+            };
+            const merged = [preview, ...(nloc.archives ?? [])].slice(0, 3);
+            const nextCountNew = (nloc.archives_count ?? nloc.archives?.length ?? 0) + 1;
+            this.locations[newLocIdx] = {
+              ...nloc,
+              archives: merged,
+              archives_count: nextCountNew,
+            };
+          }
+        }
+
+        if (this.selectedArchiveId === id) {
+          this.selectedArchiveId = null;
+          this.books = [];
+        }
+      } else if (data.name !== undefined) {
+        const ai = this.archives.findIndex((a) => a.id === id);
+        if (ai >= 0) this.archives[ai] = { ...this.archives[ai], name: data.name };
+
+        if (oldLocId != null) {
+          const li = this.locations.findIndex((l) => l.id === oldLocId);
+          if (li >= 0) {
+            const loc = this.locations[li];
+            const nextArchives = (loc.archives ?? []).map((a) =>
+              a.id === id ? { ...a, name: data.name! } : a,
+            );
+            this.locations[li] = { ...loc, archives: nextArchives };
+          }
+        }
+      }
+    });
+
+    if (oldLocId != null) {
+      await this.loadArchives(oldLocId, {
+        clearBooksAndArchive: false,
+        trackLoading: false,
+      });
+    }
+  }
+
+  async updateBook(
+    id: number,
+    data: {
+      author?: string;
+      title?: string;
+      publisher?: string;
+      annotation?: string;
+      year?: number;
+      archive_id?: number;
+    },
+    move?: {
+      fromArchiveId: number;
+      fromLocationId?: number;
+      toArchiveId: number;
+      toLocationId?: number;
+    },
+  ) {
     await api.books.update(id, data);
-    await this.loadBooks(this.selectedArchiveId!);
+    const moved = !!move && move.fromArchiveId !== move.toArchiveId;
+
+    runInAction(() => {
+      const localBook = this.books.find((b) => b.id === id);
+      const srIdx = this.searchResults.findIndex((b) => b.id === id);
+      const srBook = srIdx >= 0 ? this.searchResults[srIdx] : undefined;
+      if (srIdx >= 0 && srBook) {
+        this.searchResults[srIdx] = {
+          ...srBook,
+          ...data,
+          year: data.year !== undefined ? data.year : srBook.year,
+        };
+      }
+
+      if (moved && move) {
+        const title = (data.title ?? localBook?.title ?? srBook?.title) || '';
+        const preview: BookPreview = {
+          id,
+          title,
+          photo_path: localBook?.photo_path ?? this.searchResults[srIdx]?.photo_path,
+        };
+
+        const oldAi = this.archives.findIndex((a) => a.id === move.fromArchiveId);
+        if (oldAi >= 0) {
+          const a = this.archives[oldAi];
+          this.archives[oldAi] = {
+            ...a,
+            books_count: Math.max(0, (a.books_count ?? 0) - 1),
+          };
+        }
+        const newAi = this.archives.findIndex((a) => a.id === move.toArchiveId);
+        if (newAi >= 0) {
+          const a = this.archives[newAi];
+          this.archives[newAi] = { ...a, books_count: (a.books_count ?? 0) + 1 };
+        }
+
+        if (move.fromLocationId != null) {
+          this.removeBookFromLocationArchivePreview(
+            move.fromLocationId,
+            move.fromArchiveId,
+            id,
+          );
+        }
+        if (move.toLocationId != null) {
+          this.addBookToLocationArchivePreview(move.toLocationId, move.toArchiveId, preview);
+        }
+      }
+    });
+
+    if (this.selectedArchiveId != null) {
+      await this.loadBooks(this.selectedArchiveId, { trackLoading: false });
+    }
   }
 
   async deleteLocation(id: number) {
