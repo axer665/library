@@ -145,16 +145,47 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 10px 20px -14px rgba(44, 36, 25, 0.3);
 }
 
-.card-surface--location {
+/* Высоты карточек каталога (БЭМ) — правьте и дублируйте в @media по необходимости */
+.location-card__inner {
+  min-height: 430px;
+}
+
+.location-card__body {
+  min-height: 310px;
+}
+
+.location-card__archive-block {
+  min-height: 88px;
+}
+
+.location-card__archive-block-body {
+  min-height: 56px;
+}
+
+.archive-card__inner {
   min-height: 420px;
 }
 
-.card-surface--archive {
-  min-height: 280px;
+.archive-card__hero {
+  min-height: 180px;
 }
 
-.card-surface--book {
-  min-height: 320px;
+.book-card__inner {
+  min-height: 420px;
+}
+
+.book-card__media {
+  min-height: 220px;
+}
+
+/* Скелетон загрузки — те же минимальные высоты, что у карточек */
+.content-skeleton__card--locations {
+  min-height: 430px;
+}
+
+.content-skeleton__card--archives,
+.content-skeleton__card--books {
+  min-height: 420px;
 }
 
 /* Выступ вперёд при наведении */

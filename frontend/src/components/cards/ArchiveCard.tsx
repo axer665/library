@@ -42,7 +42,7 @@ interface ArchiveCardProps {
 export function ArchiveCard({ archive, onClick, onEdit }: ArchiveCardProps) {
  return (
   <div className="archive-card card-3d relative">
-   <div className="archive-card__inner card-inner h-full min-h-[420px] rounded-2xl">
+   <div className="archive-card__inner card-inner h-full rounded-2xl">
     <div
      role={onClick ? "button" : undefined}
      tabIndex={onClick ? 0 : undefined}
@@ -50,7 +50,7 @@ export function ArchiveCard({ archive, onClick, onEdit }: ArchiveCardProps) {
      onClick={onClick}
      className="archive-card__face archive-card__face--front card-front card-surface card-surface--archive group"
     >
-     <div className="archive-card__hero flex min-h-[180px] flex-1 items-center justify-center rounded-t-[14px] bg-sand">
+     <div className="archive-card__hero flex flex-1 items-center justify-center rounded-t-[14px] bg-sand">
       <span className="archive-card__hero-icon text-7xl" aria-hidden>
        📁
       </span>

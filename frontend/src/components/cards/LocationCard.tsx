@@ -76,12 +76,12 @@ function ArchiveBlock({
    type="button"
    onClick={onArchiveClick}
    aria-label={`Открыть архив ${archive.name}`}
-   className="location-card__archive-block flex min-h-[88px] shrink-0 flex-col overflow-hidden rounded-lg border border-theme bg-parchment transition hover-border-accent hover:bg-accent-muted hover:shadow-sm"
+   className="location-card__archive-block flex shrink-0 flex-col overflow-hidden rounded-lg border border-theme bg-parchment transition hover-border-accent hover:bg-accent-muted hover:shadow-sm"
   >
    <div className="location-card__archive-block-header shrink-0 rounded-t-lg border-b border-theme bg-sand px-2 py-1.5">
     <span className="location-card__archive-block-name truncate text-xs font-medium text-ink">{archive.name}</span>
    </div>
-   <div className="location-card__archive-block-body flex min-h-[56px] flex-wrap items-center gap-1.5 overflow-hidden p-2">
+   <div className="location-card__archive-block-body flex flex-wrap items-center gap-1.5 overflow-hidden p-2">
     {hasBooks ? (
      books.slice(0, 5).map((book) => (
       <BookSquare key={book.id} book={book} />
@@ -111,7 +111,7 @@ export function LocationCard({ location, onClick, onArchiveClick, onEdit }: Loca
 
  return (
   <div className="location-card card-3d relative">
-   <div className="location-card__inner card-inner h-full min-h-[430px] rounded-2xl">
+   <div className="location-card__inner card-inner h-full rounded-2xl">
     <div
      role={onClick ? "button" : undefined}
      tabIndex={onClick ? 0 : undefined}
@@ -133,7 +133,7 @@ export function LocationCard({ location, onClick, onArchiveClick, onEdit }: Loca
       </div>
      </div>
 
-     <div className="location-card__body flex min-h-[310px] flex-col gap-2 p-3">
+     <div className="location-card__body flex flex-col gap-2 p-3">
       {archives.slice(0, 3).map((arch) => (
        <ArchiveBlock key={arch.id} archive={arch} onArchiveClick={handleArchiveClick(arch.id)} />
       ))}

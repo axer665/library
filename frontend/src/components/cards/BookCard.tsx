@@ -51,7 +51,7 @@ export function BookCard({ book, onClick, onEdit }: BookCardProps) {
 
  return (
   <div className="book-card card-3d relative">
-   <div className="book-card__inner card-inner h-full min-h-[420px] rounded-2xl">
+   <div className="book-card__inner card-inner h-full rounded-2xl">
     <div
      role="button"
      tabIndex={0}
@@ -59,7 +59,7 @@ export function BookCard({ book, onClick, onEdit }: BookCardProps) {
      onClick={handleClick}
      className="book-card__face book-card__face--front card-front card-surface card-surface--book group"
     >
-     <div className="book-card__media relative min-h-[220px] flex-1 overflow-hidden rounded-t-[14px] bg-sand">
+     <div className="book-card__media relative flex-1 overflow-hidden rounded-t-[14px] bg-sand">
       {book.photo_path ? (
        <img
         className="book-card__img h-full w-full object-cover transition group-hover:scale-105"

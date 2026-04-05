@@ -4,9 +4,11 @@ interface ContentSkeletonProps {
  view: "locations" | "archives" | "books";
 }
 
-function SkeletonCard({ minHeightClass }: { minHeightClass: string }) {
+function SkeletonCard({ view }: { view: "locations" | "archives" | "books" }) {
  return (
-  <div className={`animate-pulse overflow-hidden rounded-2xl border-2 border-theme bg-white ${minHeightClass}`}>
+  <div
+   className={`content-skeleton__card content-skeleton__card--${view} animate-pulse overflow-hidden rounded-2xl border-2 border-theme bg-white`}
+  >
    <div className="h-20 shrink-0 rounded-t-[14px] bg-sand" />
    <div className="flex flex-col gap-4 p-4">
     <div className="h-4 max-w-[75%] rounded bg-sand" />
@@ -23,14 +25,12 @@ function SkeletonCard({ minHeightClass }: { minHeightClass: string }) {
 
 export function ContentSkeleton({ view }: ContentSkeletonProps) {
  const isLocations = view === "locations";
- const isArchives = view === "archives";
- const cardHeightClass = isLocations ? "min-h-[420px]" : isArchives ? "min-h-[420px]" : "min-h-[420px]";
  const count = isLocations ? 4 : 6;
 
  return (
-  <div className="grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-8 p-6">
+  <div className="card-grid content-skeleton grid grid-cols-[repeat(auto-fill,minmax(340px,1fr))] gap-8 p-6">
    {Array.from({ length: count }).map((_, i) => (
-    <SkeletonCard key={i} minHeightClass={cardHeightClass} />
+    <SkeletonCard key={i} view={view} />
    ))}
   </div>
  );
