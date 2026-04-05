@@ -92,15 +92,19 @@ class CatalogStore {
     }
   }
 
-  async loadArchives(locationId: number, options?: { clearBooksAndArchive?: boolean }) {
+  async loadArchives(
+    locationId: number,
+    options?: { clearBooksAndArchive?: boolean; trackLoading?: boolean },
+  ) {
     const clearBooksAndArchive = options?.clearBooksAndArchive !== false;
+    const trackLoading = options?.trackLoading !== false;
     runInAction(() => {
       this.selectedLocationId = locationId;
       if (clearBooksAndArchive) {
         this.selectedArchiveId = null;
         this.books = [];
       }
-      this.loading = true;
+      if (trackLoading) this.loading = true;
     });
     try {
       const list = await api.archives.list(locationId);
@@ -110,7 +114,7 @@ class CatalogStore {
           this.selectedArchiveId = null;
       });
     } finally {
-      runInAction(() => (this.loading = false));
+      if (trackLoading) runInAction(() => (this.loading = false));
     }
   }
 
@@ -125,10 +129,9 @@ class CatalogStore {
     this.lastCatalogUrl = url;
   }
 
-  /** Сброс каталога + индикатор загрузки перед переходом на /dashboard (strict-mode). */
+  /** Сброс выбора перед переходом на /dashboard (без глобального loading — его выставит loadLocations). */
   beginNavigateToDashboard() {
     runInAction(() => {
-      this.loading = true;
       this.selectedLocationId = null;
       this.selectedArchiveId = null;
       this.archives = [];
@@ -136,10 +139,9 @@ class CatalogStore {
     });
   }
 
-  /** Переход к списку архивов локации: очистить книги и выбранный архив, показать загрузку. */
+  /** Переход к списку архивов: сброс книг/архива без глобального loading (оверлей — только routeLoading). */
   beginNavigateToArchivesList() {
     runInAction(() => {
-      this.loading = true;
       this.selectedArchiveId = null;
       this.books = [];
     });
@@ -151,27 +153,39 @@ class CatalogStore {
     if (this.selectedLocationId) this.loadArchives(this.selectedLocationId);
   }
 
-  async selectLocationAndArchive(locationId: number, archiveId: number) {
+  async selectLocationAndArchive(
+    locationId: number,
+    archiveId: number,
+    options?: { trackLoading?: boolean },
+  ) {
+    const trackLoading = options?.trackLoading !== false;
+    const prevLoc = this.selectedLocationId;
+    const prevArch = this.selectedArchiveId;
     runInAction(() => {
       this.selectedLocationId = locationId;
       this.selectedArchiveId = archiveId;
-      this.archives = [];
-      this.books = [];
+      if (prevLoc !== locationId) {
+        this.archives = [];
+        this.books = [];
+      } else if (prevArch !== archiveId) {
+        this.books = [];
+      }
     });
-    await this.loadArchives(locationId, { clearBooksAndArchive: false });
-    await this.loadBooks(archiveId);
+    await this.loadArchives(locationId, { clearBooksAndArchive: false, trackLoading });
+    await this.loadBooks(archiveId, { trackLoading });
   }
 
-  async loadBooks(archiveId: number) {
+  async loadBooks(archiveId: number, options?: { trackLoading?: boolean }) {
+    const trackLoading = options?.trackLoading !== false;
     runInAction(() => {
       this.selectedArchiveId = archiveId;
-      this.loading = true;
+      if (trackLoading) this.loading = true;
     });
     try {
       const list = await api.books.list(archiveId);
       runInAction(() => (this.books = list));
     } finally {
-      runInAction(() => (this.loading = false));
+      if (trackLoading) runInAction(() => (this.loading = false));
     }
   }
 

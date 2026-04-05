@@ -12,7 +12,12 @@ export default function LocationArchivesRoutePage({
   const resolvedParams = use(params);
   const locationId = Number(resolvedParams.locationId);
 
-  const [routeLoading, setRouteLoading] = useState(true);
+  const [routeLoading, setRouteLoading] = useState(() => {
+    if (!Number.isFinite(locationId)) return true;
+    return !(
+      catalogStore.selectedLocationId === locationId && catalogStore.archives.length > 0
+    );
+  });
   const lastKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -22,9 +27,11 @@ export default function LocationArchivesRoutePage({
     lastKeyRef.current = key;
 
     catalogStore.setLastCatalogUrl(`/dashboard/locations/${locationId}/archives`);
-    setRouteLoading(true);
+    const warm =
+      catalogStore.selectedLocationId === locationId && catalogStore.archives.length > 0;
+    setRouteLoading(!warm);
 
-    void catalogStore.loadArchives(locationId).finally(() => {
+    void catalogStore.loadArchives(locationId, { trackLoading: false }).finally(() => {
       // Покажем контент, когда MobX закончит загрузку
       setRouteLoading(false);
     });

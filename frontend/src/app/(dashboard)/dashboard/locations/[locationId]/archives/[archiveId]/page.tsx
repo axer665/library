@@ -13,7 +13,14 @@ export default function LocationArchiveBooksRoutePage({
   const locationId = Number(resolvedParams.locationId);
   const archiveId = Number(resolvedParams.archiveId);
 
-  const [routeLoading, setRouteLoading] = useState(true);
+  const [routeLoading, setRouteLoading] = useState(() => {
+    if (!Number.isFinite(locationId) || !Number.isFinite(archiveId)) return true;
+    return !(
+      catalogStore.selectedLocationId === locationId &&
+      catalogStore.selectedArchiveId === archiveId &&
+      catalogStore.books.length > 0
+    );
+  });
   const lastKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -23,11 +30,17 @@ export default function LocationArchiveBooksRoutePage({
     lastKeyRef.current = key;
 
     catalogStore.setLastCatalogUrl(`/dashboard/locations/${locationId}/archives/${archiveId}`);
-    setRouteLoading(true);
+    const warm =
+      catalogStore.selectedLocationId === locationId &&
+      catalogStore.selectedArchiveId === archiveId &&
+      catalogStore.books.length > 0;
+    setRouteLoading(!warm);
 
-    void catalogStore.selectLocationAndArchive(locationId, archiveId).finally(() => {
-      setRouteLoading(false);
-    });
+    void catalogStore
+      .selectLocationAndArchive(locationId, archiveId, { trackLoading: false })
+      .finally(() => {
+        setRouteLoading(false);
+      });
   }, [locationId, archiveId]);
 
   return <DashboardPage forceView="books" routeLoading={routeLoading} />;
