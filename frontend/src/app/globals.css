@@ -189,6 +189,10 @@ input:focus, textarea:focus, select:focus {
 }
 
 /* Скелетон загрузки — те же минимальные высоты, что у карточек */
+.content-skeleton__head {
+  min-height: 5rem;
+}
+
 .content-skeleton__card--locations {
   min-height: 430px;
 }
@@ -212,8 +216,47 @@ input:focus, textarea:focus, select:focus {
     display: none;
   }
 
+  /* Скелетон списка локаций — как компактная location-card */
   .content-skeleton__card--locations {
     min-height: 100px;
+  }
+
+  .content-skeleton__card--locations .content-skeleton__head {
+    min-height: 3.25rem;
+    background-color: #fff;
+    border-bottom: 0;
+  }
+
+  .content-skeleton__card--locations .content-skeleton__body {
+    display: none;
+  }
+
+  /* Скелетоны архивов / книг — ниже на узких экранах */
+  .content-skeleton__card--archives,
+  .content-skeleton__card--books {
+    min-height: 300px;
+  }
+
+  .content-skeleton__card--archives .content-skeleton__head,
+  .content-skeleton__card--books .content-skeleton__head {
+    min-height: 4.5rem;
+  }
+
+  .content-skeleton__card--archives .content-skeleton__thumbs,
+  .content-skeleton__card--books .content-skeleton__thumbs {
+    margin-top: 0.75rem;
+  }
+
+  .content-skeleton__card--archives .content-skeleton__body,
+  .content-skeleton__card--books .content-skeleton__body {
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  /* Сетка карточек и скелетона — одинаковые отступы на узком экране */
+  .card-grid {
+    gap: 1rem;
+    padding: 1rem;
   }
 }
 
