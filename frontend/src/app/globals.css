@@ -231,23 +231,68 @@ input:focus, textarea:focus, select:focus {
     display: none;
   }
 
-  /* Скелетоны архивов / книг — ниже на узких экранах */
-  .content-skeleton__card--archives,
+  /* Карточка архива — компактная строка: иконка слева, текст справа */
+  .archive-card__inner {
+    min-height: 100px;
+  }
+
+  .archive-card .card-surface--archive.card-front {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .archive-card__hero {
+    min-height: 90px;
+    flex: initial;
+    border-radius: 14px 0 0 14px;
+  }
+
+  .archive-card__content {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    border-radius: 0 14px 14px 0;
+  }
+
+  /* Скелетон архивов — под компактную карточку (рядом с карточкой архива) */
+  .content-skeleton__card--archives {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 100px;
+  }
+
+  .content-skeleton__card--archives .content-skeleton__head {
+    min-height: 90px;
+    max-width: 5.5rem;
+    border-radius: 14px 0 0 14px;
+  }
+
+  .content-skeleton__card--archives .content-skeleton__body {
+    flex: 1;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    justify-content: center;
+  }
+
+  .content-skeleton__card--archives .content-skeleton__thumbs {
+    display: none;
+  }
+
+  /* Скелетон книг на узких экранах */
   .content-skeleton__card--books {
     min-height: 300px;
   }
 
-  .content-skeleton__card--archives .content-skeleton__head,
   .content-skeleton__card--books .content-skeleton__head {
     min-height: 4.5rem;
   }
 
-  .content-skeleton__card--archives .content-skeleton__thumbs,
   .content-skeleton__card--books .content-skeleton__thumbs {
     margin-top: 0.75rem;
   }
 
-  .content-skeleton__card--archives .content-skeleton__body,
   .content-skeleton__card--books .content-skeleton__body {
     gap: 0.75rem;
     padding: 1rem;
