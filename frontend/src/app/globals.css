@@ -198,6 +198,24 @@ input:focus, textarea:focus, select:focus {
   min-height: 420px;
 }
 
+@media (max-width: 480px) {
+  .location-card__inner {
+    min-height: 100px;
+  }
+
+  .location-card__header {
+    background-color: #fff;
+  }
+
+  .location-card__body {
+    display: none;
+  }
+
+  .content-skeleton__card--locations {
+    min-height: 100px;
+  }
+}
+
 /* Выступ вперёд при наведении */
 .card-3d:hover .card-front,
 .card-3d:hover .card-back {
