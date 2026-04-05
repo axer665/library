@@ -7,6 +7,7 @@ use App\Models\Archive;
 use App\Models\Book;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
@@ -16,7 +17,7 @@ class BookController extends Controller
         $archive = Archive::whereHas('location', fn ($q) => $q->where('user_id', $request->user()->id))
             ->findOrFail($archiveId);
 
-        $books = $archive->books()->get();
+        $books = $archive->books()->orderBy('sort_order')->orderBy('id')->get();
 
         return response()->json($books);
     }
@@ -65,6 +66,10 @@ class BookController extends Controller
             $archive = Archive::whereHas('location', fn ($q) => $q->where('user_id', $request->user()->id))
                 ->findOrFail($validated['archive_id']);
             $book->archive_id = $archive->id;
+            $max = Book::where('archive_id', $archive->id)
+                ->where('id', '!=', $book->id)
+                ->max('sort_order');
+            $book->sort_order = $max === null ? 0 : ((int) $max) + 1;
             unset($validated['archive_id']);
         }
 
@@ -105,5 +110,31 @@ class BookController extends Controller
         $book->update(['photo_path' => $path]);
 
         return response()->json($book);
+    }
+
+    public function reorder(Request $request, int $archiveId): JsonResponse
+    {
+        $archive = Archive::whereHas('location', fn ($q) => $q->where('user_id', $request->user()->id))
+            ->findOrFail($archiveId);
+
+        $ids = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ])['ids'];
+
+        $saved = $archive->books()->pluck('id')->sort()->values()->all();
+        $incoming = collect($ids)->sort()->values()->all();
+
+        if ($saved !== $incoming) {
+            return response()->json(['message' => 'Список id не совпадает с книгами архива'], 422);
+        }
+
+        DB::transaction(function () use ($archive, $ids) {
+            foreach ($ids as $position => $id) {
+                $archive->books()->where('id', $id)->update(['sort_order' => $position]);
+            }
+        });
+
+        return response()->json(['ok' => true]);
     }
 }

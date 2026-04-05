@@ -7,6 +7,7 @@ use App\Models\Archive;
 use App\Models\Location;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class LocationController extends Controller
 {
@@ -17,17 +18,17 @@ class LocationController extends Controller
         // возвращает пустые `archive.books`, хотя в БД книги существуют.
         $locations = $request->user()->locations()
             ->withCount('archives')
-            ->with(['archives' => fn ($q) => $q->orderByDesc('id')])
+            ->with(['archives' => fn ($q) => $q->orderBy('sort_order')->orderBy('id')])
             ->get();
 
         $locations->each(function (Location $location) {
-            $archives = $location->archives->sortByDesc('id')->values();
+            $archives = $location->archives->values();
             $topArchives = $archives->take(3)->values();
 
             foreach ($topArchives as $archive) {
                 $archive->setRelation(
                     'books',
-                    $archive->books()->orderByDesc('id')->limit(5)->get()
+                    $archive->books()->orderBy('sort_order')->orderBy('id')->limit(5)->get()
                 );
             }
 
@@ -79,5 +80,29 @@ class LocationController extends Controller
         $location->delete();
 
         return response()->json(['message' => 'Локация удалена']);
+    }
+
+    public function reorder(Request $request): JsonResponse
+    {
+        $ids = $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'integer',
+        ])['ids'];
+
+        $user = $request->user();
+        $saved = $user->locations()->pluck('id')->sort()->values()->all();
+        $incoming = collect($ids)->sort()->values()->all();
+
+        if ($saved !== $incoming) {
+            return response()->json(['message' => 'Список id не совпадает с локациями пользователя'], 422);
+        }
+
+        DB::transaction(function () use ($user, $ids) {
+            foreach ($ids as $position => $id) {
+                $user->locations()->where('id', $id)->update(['sort_order' => $position]);
+            }
+        });
+
+        return response()->json(['ok' => true]);
     }
 }

@@ -32,6 +32,10 @@ Route::middleware('auth:api')->group(function () {
 });
 
 Route::middleware(['auth:api', 'verified'])->group(function () {
+    Route::put('/locations/reorder', [LocationController::class, 'reorder']);
+    Route::put('/locations/{location}/archives/reorder', [ArchiveController::class, 'reorder'])->whereNumber('location');
+    Route::put('/archives/{archive}/books/reorder', [BookController::class, 'reorder'])->whereNumber('archive');
+
     Route::apiResource('locations', LocationController::class);
     Route::get('/locations/{location}/archives', [ArchiveController::class, 'index']);
     Route::post('/locations/{location}/archives', [ArchiveController::class, 'store']);

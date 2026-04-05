@@ -193,6 +193,11 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
     delete: (id: number) => request(`/locations/${id}`, { method: 'DELETE' }),
+    reorder: (ids: number[]) =>
+      request<{ ok: boolean }>('/locations/reorder', {
+        method: 'PUT',
+        body: JSON.stringify({ ids }),
+      }),
   },
   archives: {
     list: (locationId: number) =>
@@ -208,6 +213,11 @@ export const api = {
         body: JSON.stringify(data),
       }),
     delete: (id: number) => request(`/archives/${id}`, { method: 'DELETE' }),
+    reorder: (locationId: number, ids: number[]) =>
+      request<{ ok: boolean }>(`/locations/${locationId}/archives/reorder`, {
+        method: 'PUT',
+        body: JSON.stringify({ ids }),
+      }),
   },
   books: {
     list: (archiveId: number) =>
@@ -239,6 +249,11 @@ export const api = {
     update: (id: number, data: Record<string, unknown>) =>
       request(`/books/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: number) => request(`/books/${id}`, { method: 'DELETE' }),
+    reorder: (archiveId: number, ids: number[]) =>
+      request<{ ok: boolean }>(`/archives/${archiveId}/books/reorder`, {
+        method: 'PUT',
+        body: JSON.stringify({ ids }),
+      }),
     uploadPhoto: (id: number, file: File) => {
       const formData = new FormData();
       formData.append('photo', file);

@@ -26,6 +26,9 @@ interface MainContentProps {
  onEditLocation?: (loc: Location) => void;
  onEditArchive?: (arch: Archive) => void;
  onEditBook?: (book: Book) => void;
+ onReorderLocations?: (orderedIds: number[]) => void;
+ onReorderArchives?: (orderedIds: number[]) => void;
+ onReorderBooks?: (orderedIds: number[]) => void;
 }
 
 export function MainContent({
@@ -47,6 +50,9 @@ export function MainContent({
  onEditLocation,
  onEditArchive,
  onEditBook,
+ onReorderLocations,
+ onReorderArchives,
+ onReorderBooks,
 }: MainContentProps) {
  // Скелетон только если нет данных для текущего вида — иначе при client-навигации мерцает весь экран.
  const hasMeaningfulList =
@@ -124,15 +130,21 @@ export function MainContent({
     onSelect={(id) => onSelectLocation?.(id)}
     onArchiveClick={onArchiveClick}
     onEdit={onEditLocation}
+    onReorder={onReorderLocations}
    />
   ) : view === "archives" ? (
    <ArchiveList
     archives={archives}
     onSelect={(id) => onSelectArchive?.(id)}
     onEdit={onEditArchive}
+    onReorder={onReorderArchives}
    />
   ) : (
-   <BookList books={books} onEdit={(book) => onEditBook?.(book)} />
+   <BookList
+    books={books}
+    onEdit={(book) => onEditBook?.(book)}
+    onReorder={onReorderBooks}
+   />
   );
 
  const content =

@@ -12,7 +12,7 @@ class Location extends Model
 {
     use HasFactory, SoftDeletes;
 
-    protected $fillable = ['user_id', 'name'];
+    protected $fillable = ['user_id', 'name', 'sort_order'];
 
     public function user(): BelongsTo
     {
@@ -21,11 +21,16 @@ class Location extends Model
 
     public function archives(): HasMany
     {
-        return $this->hasMany(Archive::class);
+        return $this->hasMany(Archive::class)->orderBy('sort_order')->orderBy('id');
     }
 
     protected static function booted(): void
     {
+        static::creating(function (Location $location) {
+            $max = static::where('user_id', $location->user_id)->max('sort_order');
+            $location->sort_order = $max === null ? 0 : ((int) $max) + 1;
+        });
+
         static::deleting(function (Location $location) {
             foreach ($location->archives as $archive) {
                 $archive->delete();

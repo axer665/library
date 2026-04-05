@@ -33,6 +33,7 @@ function EditButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
  return (
   <button
    type="button"
+   onPointerDown={(e) => e.stopPropagation()}
    onClick={(e) => {
     e.stopPropagation();
     onClick(e);
@@ -65,6 +66,7 @@ function BookSquare({ book }: { book: BookPreview }) {
   <div
    className="location-card__book-thumb h-12 w-12 shrink-0 overflow-hidden rounded bg-sand transition hover:ring-2 hover-ring-accent hover:ring-offset-1"
    title={book.title}
+   onPointerDown={(e) => e.stopPropagation()}
    onClick={(e) => e.stopPropagation()}
   >
    {book.photo_path ? (
@@ -94,6 +96,7 @@ function ArchiveBlock({
  return (
   <button
    type="button"
+   onPointerDown={(e) => e.stopPropagation()}
    onClick={onArchiveClick}
    aria-label={`Открыть архив ${archive.name}`}
    className="location-card__archive-block flex shrink-0 flex-col overflow-hidden rounded-lg border border-theme bg-parchment transition hover-border-accent hover:bg-accent-muted hover:shadow-sm"

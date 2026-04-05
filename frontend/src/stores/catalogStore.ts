@@ -520,6 +520,61 @@ class CatalogStore {
     });
   }
 
+  async reorderLocations(orderedIds: number[]) {
+    const prev = this.locations.slice();
+    const map = new Map(prev.map((l) => [l.id, l]));
+    runInAction(() => {
+      this.locations = orderedIds
+        .map((id) => map.get(id))
+        .filter((x): x is Location => x != null);
+    });
+    try {
+      await api.locations.reorder(orderedIds);
+    } catch {
+      runInAction(() => {
+        this.locations = prev;
+      });
+    }
+  }
+
+  async reorderArchives(orderedIds: number[]) {
+    const locId = this.selectedLocationId;
+    if (!locId) return;
+    const prev = this.archives.slice();
+    const map = new Map(prev.map((a) => [a.id, a]));
+    runInAction(() => {
+      this.archives = orderedIds
+        .map((id) => map.get(id))
+        .filter((x): x is Archive => x != null);
+    });
+    try {
+      await api.archives.reorder(locId, orderedIds);
+    } catch {
+      runInAction(() => {
+        this.archives = prev;
+      });
+    }
+  }
+
+  async reorderBooks(orderedIds: number[]) {
+    const archId = this.selectedArchiveId;
+    if (!archId) return;
+    const prev = this.books.slice();
+    const map = new Map(prev.map((b) => [b.id, b]));
+    runInAction(() => {
+      this.books = orderedIds
+        .map((id) => map.get(id))
+        .filter((x): x is Book => x != null);
+    });
+    try {
+      await api.books.reorder(archId, orderedIds);
+    } catch {
+      runInAction(() => {
+        this.books = prev;
+      });
+    }
+  }
+
   setSearchFilters(filters: Partial<SearchFilters>) {
     const next = { ...this.searchFilters, ...filters };
     if (filters.location_id !== undefined) {

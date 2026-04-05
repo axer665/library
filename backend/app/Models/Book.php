@@ -13,6 +13,7 @@ class Book extends Model
 
     protected $fillable = [
         'archive_id',
+        'sort_order',
         'author',
         'title',
         'publisher',
@@ -24,6 +25,14 @@ class Book extends Model
     protected $casts = [
         'year' => 'integer',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Book $book) {
+            $max = static::where('archive_id', $book->archive_id)->max('sort_order');
+            $book->sort_order = $max === null ? 0 : ((int) $max) + 1;
+        });
+    }
 
     public function archive(): BelongsTo
     {

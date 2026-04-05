@@ -301,6 +301,9 @@ function DashboardPage({
     onEditLocation={handleEditLocation}
     onEditArchive={handleEditArchive}
     onEditBook={handleEditBook}
+    onReorderLocations={(ids) => void catalogStore.reorderLocations(ids)}
+    onReorderArchives={(ids) => void catalogStore.reorderArchives(ids)}
+    onReorderBooks={(ids) => void catalogStore.reorderBooks(ids)}
    />
 
    {(modal === "location" || modal === "editLocation") && (

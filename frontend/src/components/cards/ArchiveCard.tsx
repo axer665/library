@@ -6,6 +6,7 @@ function EditButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
  return (
   <button
    type="button"
+   onPointerDown={(e) => e.stopPropagation()}
    onClick={(e) => {
     e.stopPropagation();
     onClick(e);

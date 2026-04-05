@@ -58,6 +58,6 @@ class User extends Authenticatable implements CanResetPasswordContract, JWTSubje
 
     public function locations()
     {
-        return $this->hasMany(Location::class);
+        return $this->hasMany(Location::class)->orderBy('sort_order')->orderBy('id');
     }
 }
