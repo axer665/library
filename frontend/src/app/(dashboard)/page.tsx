@@ -1,15 +1,41 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/authStore";
+import { catalogStore } from "@/stores/catalogStore";
 import { api } from "@/lib/api";
 import { Modal } from "@/components/Modal";
 import { BrandLogo } from "@/components/BrandLogo";
 
-export default function HomePage() {
+function MenuIcon() {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="22"
+      height="22"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden
+    >
+      <line x1="4" y1="6" x2="20" y2="6" />
+      <line x1="4" y1="12" x2="20" y2="12" />
+      <line x1="4" y1="18" x2="20" y2="18" />
+    </svg>
+  );
+}
+
+function HomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [navMounted, setNavMounted] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [authMode, setAuthMode] = useState<"login" | "register" | "forgot" | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -22,6 +48,32 @@ export default function HomePage() {
     password: "",
     passwordConfirmation: "",
   });
+
+  useEffect(() => {
+    setNavMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (authStore.token) void authStore.syncUserFromApi();
+  }, []);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [menuOpen]);
 
   useEffect(() => {
     const mode = searchParams.get("auth");
@@ -93,6 +145,13 @@ export default function HomePage() {
     }
   };
 
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    await authStore.logout();
+    router.replace("/");
+    router.refresh();
+  };
+
   const onForgotSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -115,26 +174,81 @@ export default function HomePage() {
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
             <BrandLogo href="/" />
             <nav aria-label="Навигация по сайту" className="flex items-center gap-3">
-              <button
-                type="button"
-                className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover-bg-sand"
-                onClick={() => {
-                  setError("");
-                  setAuthMode("login");
-                }}
-              >
-                Войти
-              </button>
-              <button
-                type="button"
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
-                onClick={() => {
-                  setError("");
-                  setAuthMode("register");
-                }}
-              >
-                Регистрация
-              </button>
+              {!navMounted ? (
+                <div className="h-10 w-[11.5rem]" aria-hidden />
+              ) : authStore.isAuthenticated ? (
+                <div className="relative flex justify-end" ref={menuRef}>
+                  <button
+                    type="button"
+                    onClick={() => setMenuOpen((o) => !o)}
+                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-theme bg-white text-ink transition hover-border-accent hover:bg-accent-muted"
+                    aria-expanded={menuOpen}
+                    aria-haspopup="menu"
+                    aria-label="Меню аккаунта"
+                  >
+                    <MenuIcon />
+                  </button>
+                  {menuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-xl border border-theme bg-white py-1 shadow-lg"
+                    >
+                      <Link
+                        role="menuitem"
+                        href="/dashboard/profile"
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-3 py-2.5 text-left text-sm transition hover:bg-sand"
+                      >
+                        <span className="block truncate font-medium text-ink">
+                          {authStore.user?.email ?? "Профиль"}
+                        </span>
+                        <span className="mt-0.5 block text-xs text-ink-muted">Личные данные</span>
+                      </Link>
+                      <div className="my-1 border-t border-theme" role="separator" />
+                      <Link
+                        role="menuitem"
+                        href={catalogStore.lastCatalogUrl || "/dashboard"}
+                        onClick={() => setMenuOpen(false)}
+                        className="block px-3 py-2 text-left text-sm text-ink transition hover:bg-sand"
+                      >
+                        Каталог
+                      </Link>
+                      <div className="my-1 border-t border-theme" role="separator" />
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={handleLogout}
+                        className="w-full px-3 py-2 text-left text-sm text-ink transition hover:bg-sand"
+                      >
+                        Выйти
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover-bg-sand"
+                    onClick={() => {
+                      setError("");
+                      setAuthMode("login");
+                    }}
+                  >
+                    Войти
+                  </button>
+                  <button
+                    type="button"
+                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+                    onClick={() => {
+                      setError("");
+                      setAuthMode("register");
+                    }}
+                  >
+                    Регистрация
+                  </button>
+                </>
+              )}
             </nav>
           </div>
         </header>
@@ -445,3 +559,5 @@ export default function HomePage() {
     </>
   );
 }
+
+export default observer(HomePageInner);
