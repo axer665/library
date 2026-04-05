@@ -76,7 +76,9 @@ class CatalogStore {
   }
 
   async loadLocations() {
-    this.loading = true;
+    runInAction(() => {
+      this.loading = true;
+    });
     try {
       const list = await api.locations.list();
       runInAction(() => {
@@ -90,11 +92,16 @@ class CatalogStore {
     }
   }
 
-  async loadArchives(locationId: number) {
-    this.selectedLocationId = locationId;
-    this.selectedArchiveId = null;
-    this.books = [];
-    this.loading = true;
+  async loadArchives(locationId: number, options?: { clearBooksAndArchive?: boolean }) {
+    const clearBooksAndArchive = options?.clearBooksAndArchive !== false;
+    runInAction(() => {
+      this.selectedLocationId = locationId;
+      if (clearBooksAndArchive) {
+        this.selectedArchiveId = null;
+        this.books = [];
+      }
+      this.loading = true;
+    });
     try {
       const list = await api.archives.list(locationId);
       runInAction(() => {
@@ -118,6 +125,26 @@ class CatalogStore {
     this.lastCatalogUrl = url;
   }
 
+  /** Сброс каталога + индикатор загрузки перед переходом на /dashboard (strict-mode). */
+  beginNavigateToDashboard() {
+    runInAction(() => {
+      this.loading = true;
+      this.selectedLocationId = null;
+      this.selectedArchiveId = null;
+      this.archives = [];
+      this.books = [];
+    });
+  }
+
+  /** Переход к списку архивов локации: очистить книги и выбранный архив, показать загрузку. */
+  beginNavigateToArchivesList() {
+    runInAction(() => {
+      this.loading = true;
+      this.selectedArchiveId = null;
+      this.books = [];
+    });
+  }
+
   backToArchives() {
     this.selectedArchiveId = null;
     this.books = [];
@@ -125,13 +152,21 @@ class CatalogStore {
   }
 
   async selectLocationAndArchive(locationId: number, archiveId: number) {
-    await this.loadArchives(locationId);
+    runInAction(() => {
+      this.selectedLocationId = locationId;
+      this.selectedArchiveId = archiveId;
+      this.archives = [];
+      this.books = [];
+    });
+    await this.loadArchives(locationId, { clearBooksAndArchive: false });
     await this.loadBooks(archiveId);
   }
 
   async loadBooks(archiveId: number) {
-    this.selectedArchiveId = archiveId;
-    this.loading = true;
+    runInAction(() => {
+      this.selectedArchiveId = archiveId;
+      this.loading = true;
+    });
     try {
       const list = await api.books.list(archiveId);
       runInAction(() => (this.books = list));
@@ -182,12 +217,12 @@ class CatalogStore {
 
   async updateArchive(id: number, data: { name?: string; location_id?: number }) {
     await api.archives.update(id, data);
-    runInAction(() => this.loadArchives(this.selectedLocationId!));
+    await this.loadArchives(this.selectedLocationId!);
   }
 
   async updateBook(id: number, data: Record<string, unknown>) {
     await api.books.update(id, data);
-    runInAction(() => this.loadBooks(this.selectedArchiveId!));
+    await this.loadBooks(this.selectedArchiveId!);
   }
 
   async deleteLocation(id: number) {
@@ -228,14 +263,20 @@ class CatalogStore {
         );
       } else {
         next.archive_id = undefined;
-        this.filterArchives = [];
       }
     }
-    this.searchFilters = next;
+    runInAction(() => {
+      this.searchFilters = next;
+      if (filters.location_id !== undefined && !filters.location_id) {
+        this.filterArchives = [];
+      }
+    });
   }
 
   async search(params: Record<string, string | number | undefined> = {}, page = 1) {
-    this.searchLoading = true;
+    runInAction(() => {
+      this.searchLoading = true;
+    });
     try {
       const res = await api.search.books({
         ...params,

@@ -23,10 +23,6 @@ export default function LocationArchivesRoutePage({
 
     catalogStore.setLastCatalogUrl(`/dashboard/locations/${locationId}/archives`);
     setRouteLoading(true);
-    catalogStore.selectedLocationId = locationId;
-    catalogStore.selectedArchiveId = null;
-    catalogStore.archives = [];
-    catalogStore.books = [];
 
     void catalogStore.loadArchives(locationId).finally(() => {
       // Покажем контент, когда MobX закончит загрузку

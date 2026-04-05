@@ -196,17 +196,14 @@ function DashboardPage({
     onAddBook={catalogStore.selectedArchiveId ? handleAddBook : undefined}
     onBackToLocations={() => {
      // Чтобы не показывать "Пока нет ..." между сбросом store и началом запроса в route-обёртке
-     catalogStore.loading = true;
-     catalogStore.backToLocations();
+     catalogStore.beginNavigateToDashboard();
      router.push(`/dashboard`);
     }}
     onBackToArchives={() => {
      const locId = catalogStore.selectedLocationId;
      // Чтобы не показывать "В этой локации пока нет архивов..." до того,
      // как route-обёртка успеет загрузить список.
-     catalogStore.loading = true;
-     catalogStore.selectedArchiveId = null;
-     catalogStore.books = [];
+     catalogStore.beginNavigateToArchivesList();
      if (locId) router.push(`/dashboard/locations/${locId}/archives`);
      else router.push(`/dashboard`);
     }}

@@ -24,10 +24,6 @@ export default function LocationArchiveBooksRoutePage({
 
     catalogStore.setLastCatalogUrl(`/dashboard/locations/${locationId}/archives/${archiveId}`);
     setRouteLoading(true);
-    catalogStore.selectedLocationId = locationId;
-    catalogStore.selectedArchiveId = archiveId;
-    catalogStore.archives = [];
-    catalogStore.books = [];
 
     void catalogStore.selectLocationAndArchive(locationId, archiveId).finally(() => {
       setRouteLoading(false);
