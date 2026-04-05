@@ -15,8 +15,6 @@ class AuthStore {
   token: string | null = null;
   loading = false;
   initialized = false;
-  /** Загрузка профиля с API (дашборд после F5) */
-  hydrating = false;
 
   constructor() {
     makeAutoObservable(this);
@@ -51,9 +49,6 @@ class AuthStore {
 
   async syncUserFromApi() {
     if (!this.token) return;
-    runInAction(() => {
-      this.hydrating = true;
-    });
     try {
       const user = await api.auth.me();
       runInAction(() => {
@@ -66,10 +61,6 @@ class AuthStore {
           this.user = null;
         });
       }
-    } finally {
-      runInAction(() => {
-        this.hydrating = false;
-      });
     }
   }
 

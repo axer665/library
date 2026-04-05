@@ -48,9 +48,20 @@ export function MainContent({
  onEditArchive,
  onEditBook,
 }: MainContentProps) {
- const showEmptyAddLocations = view === "locations" && !loading && locations.length === 0;
- const showEmptyAddArchives = view === "archives" && !loading && archives.length === 0;
- const showEmptyAddBook = view === "books" && !loading && books.length === 0;
+ // Скелетон только если нет данных для текущего вида — иначе при client-навигации мерцает весь экран.
+ const hasMeaningfulList =
+  view === "locations"
+   ? locations.length > 0
+   : view === "archives"
+    ? archives.length > 0
+    : books.length > 0;
+ const showBlockingLoading = loading && !hasMeaningfulList;
+
+ const showEmptyAddLocations =
+  view === "locations" && !showBlockingLoading && locations.length === 0;
+ const showEmptyAddArchives =
+  view === "archives" && !showBlockingLoading && archives.length === 0;
+ const showEmptyAddBook = view === "books" && !showBlockingLoading && books.length === 0;
 
  const headerAction =
   view === "locations" ? (
@@ -177,14 +188,14 @@ export function MainContent({
    <div className="relative flex-1 overflow-hidden">
     <div
      className={`absolute inset-0 overflow-auto transition-opacity duration-300 ${
-      loading ? "z-10 opacity-100" : "z-0 pointer-events-none opacity-0"
+      showBlockingLoading ? "z-10 opacity-100" : "z-0 pointer-events-none opacity-0"
      }`}
     >
      <ContentSkeleton view={view} />
     </div>
     <div
      className={`absolute inset-0 overflow-auto transition-opacity duration-300 ${
-      loading ? "z-0 pointer-events-none opacity-0" : "z-10 opacity-100"
+      showBlockingLoading ? "z-0 pointer-events-none opacity-0" : "z-10 opacity-100"
      }`}
     >
      {content}

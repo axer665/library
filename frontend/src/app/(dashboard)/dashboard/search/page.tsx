@@ -20,7 +20,9 @@ function SearchPage() {
  });
 
  useEffect(() => {
-  catalogStore.loadLocations();
+  if (catalogStore.locations.length === 0) {
+   void catalogStore.loadLocations();
+  }
  }, []);
 
  const handleEditBook = (book: Book) => {

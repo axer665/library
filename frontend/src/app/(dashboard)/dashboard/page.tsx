@@ -31,9 +31,11 @@ function DashboardPage({
  const [editingArchive, setEditingArchive] = useState<Archive | null>(null);
  const [editingBook, setEditingBook] = useState<Book | null>(null);
 
- // Чтобы на первом рендере /dashboard не показать пустой экран
- // ("Пока нет локаций") до того, как useEffect успеет стартовать загрузку.
- const [initialLoading, setInitialLoading] = useState(!forceView);
+ // Скелетон только если списка локаций ещё нет (первый заход / F5). При возврате из поиска — без мерцания.
+ const [initialLoading, setInitialLoading] = useState(() => {
+  if (forceView) return false;
+  return catalogStore.locations.length === 0;
+ });
  const startedRef = useRef(false);
 
  useEffect(() => {
@@ -44,9 +46,10 @@ function DashboardPage({
   startedRef.current = true;
 
   void (async () => {
-   setInitialLoading(true);
+   const needLocations = catalogStore.locations.length === 0;
+   if (needLocations) setInitialLoading(true);
    if (!forceView) catalogStore.backToLocations();
-   await catalogStore.loadLocations();
+   if (needLocations) await catalogStore.loadLocations();
    setInitialLoading(false);
   })();
  }, [forceView]);

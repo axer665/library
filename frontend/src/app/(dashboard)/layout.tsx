@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/authStore";
@@ -84,16 +84,28 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   }
  }, [mounted, pathname, router]);
 
+ const wasOnDashboardRef = useRef(false);
+
+ // me() только при входе на /dashboard/* с другого раздела или пока user ещё нет — не при каждом Link внутри каталога/поиска.
  useEffect(() => {
-  if (mounted && pathname.startsWith("/dashboard") && authStore.token) {
-   void authStore.syncUserFromApi();
+  if (!mounted || !authStore.token) return;
+  const onDash = pathname.startsWith("/dashboard");
+  if (onDash) {
+   const firstEnter = !wasOnDashboardRef.current;
+   wasOnDashboardRef.current = true;
+   if (firstEnter || !authStore.user) {
+    void authStore.syncUserFromApi();
+   }
+  } else {
+   wasOnDashboardRef.current = false;
   }
- }, [mounted, pathname, authStore.token]);
+ }, [mounted, pathname, authStore.token, authStore.user]);
 
  if (!mounted) return LOADING;
  if (!pathname.startsWith("/dashboard")) return <>{children}</>;
  if (!authStore.token) return LOADING;
- if (authStore.hydrating || (authStore.token && !authStore.user)) return LOADING;
+ // Пока нет user после F5 — ждём первый me(); фоновые sync не подменяют весь экран.
+ if (authStore.token && !authStore.user) return LOADING;
 
  const needsEmailVerification = authStore.user && !authStore.user.email_verified_at;
 
