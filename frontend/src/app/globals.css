@@ -198,13 +198,14 @@ input:focus, textarea:focus, select:focus {
   min-height: 420px;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 760px) {
   .location-card__inner {
     min-height: 100px;
   }
 
   .location-card__header {
     background-color: #fff;
+    border-bottom: 0;
   }
 
   .location-card__body {
