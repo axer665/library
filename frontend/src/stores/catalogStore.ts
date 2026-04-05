@@ -204,12 +204,50 @@ class CatalogStore {
 
   async createArchive(locationId: number, name: string) {
     const arch = await api.archives.create(locationId, name);
-    runInAction(() => this.archives.push(arch));
+    runInAction(() => {
+      this.archives.push(arch);
+      const li = this.locations.findIndex((l) => l.id === locationId);
+      if (li >= 0) {
+        const loc = this.locations[li];
+        const nextCount = (loc.archives_count ?? loc.archives?.length ?? 0) + 1;
+        const prevPreview = loc.archives ?? [];
+        const preview: ArchivePreview = { id: arch.id, name: arch.name, books: [] };
+        const merged = [preview, ...prevPreview].slice(0, 3);
+        this.locations[li] = { ...loc, archives_count: nextCount, archives: merged };
+      }
+    });
   }
 
   async createBook(archiveId: number, data: { author: string; title: string; publisher: string; annotation?: string; year?: number }) {
     const book = await api.books.create(archiveId, data);
-    runInAction(() => this.books.push(book));
+    runInAction(() => {
+      this.books.push(book);
+      const ai = this.archives.findIndex((a) => a.id === archiveId);
+      if (ai >= 0) {
+        const a = this.archives[ai];
+        this.archives[ai] = { ...a, books_count: (a.books_count ?? 0) + 1 };
+      }
+      const locId = this.selectedLocationId;
+      if (locId != null) {
+        const li = this.locations.findIndex((l) => l.id === locId);
+        if (li >= 0) {
+          const loc = this.locations[li];
+          const nextArchives = loc.archives?.map((ar) => {
+            if (ar.id !== archiveId) return ar;
+            const prevBooks = ar.books ?? [];
+            const preview: BookPreview = {
+              id: book.id,
+              title: book.title,
+              photo_path: book.photo_path,
+            };
+            return { ...ar, books: [preview, ...prevBooks].slice(0, 5) };
+          });
+          if (nextArchives) {
+            this.locations[li] = { ...loc, archives: nextArchives };
+          }
+        }
+      }
+    });
     return book;
   }
 
@@ -255,6 +293,16 @@ class CatalogStore {
     await api.archives.delete(id);
     runInAction(() => {
       this.archives = this.archives.filter((a) => a.id !== id);
+      const locId = this.selectedLocationId;
+      if (locId != null) {
+        const li = this.locations.findIndex((l) => l.id === locId);
+        if (li >= 0) {
+          const loc = this.locations[li];
+          const filtered = (loc.archives ?? []).filter((a) => a.id !== id);
+          const nextCount = Math.max(0, (loc.archives_count ?? loc.archives?.length ?? 0) - 1);
+          this.locations[li] = { ...loc, archives: filtered, archives_count: nextCount };
+        }
+      }
       if (this.selectedArchiveId === id) {
         this.selectedArchiveId = this.archives[0]?.id ?? null;
         this.books = [];
@@ -264,7 +312,32 @@ class CatalogStore {
 
   async deleteBook(id: number) {
     await api.books.delete(id);
-    runInAction(() => (this.books = this.books.filter((b) => b.id !== id)));
+    runInAction(() => {
+      this.books = this.books.filter((b) => b.id !== id);
+      const archId = this.selectedArchiveId;
+      if (archId != null) {
+        const ai = this.archives.findIndex((a) => a.id === archId);
+        if (ai >= 0) {
+          const a = this.archives[ai];
+          this.archives[ai] = { ...a, books_count: Math.max(0, (a.books_count ?? 0) - 1) };
+        }
+      }
+      const locId = this.selectedLocationId;
+      if (locId != null && archId != null) {
+        const li = this.locations.findIndex((l) => l.id === locId);
+        if (li >= 0) {
+          const loc = this.locations[li];
+          const nextArchives = loc.archives?.map((ar) => {
+            if (ar.id !== archId) return ar;
+            const books = (ar.books ?? []).filter((b) => b.id !== id);
+            return { ...ar, books };
+          });
+          if (nextArchives) {
+            this.locations[li] = { ...loc, archives: nextArchives };
+          }
+        }
+      }
+    });
   }
 
   setSearchFilters(filters: Partial<SearchFilters>) {

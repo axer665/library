@@ -227,10 +227,15 @@ export const api = {
       annotation?: string;
       year?: number;
     }) =>
-      request<{ id: number; author: string; title: string; publisher: string }>(
-        `/archives/${archiveId}/books`,
-        { method: 'POST', body: JSON.stringify(data) }
-      ),
+      request<{
+        id: number;
+        author: string;
+        title: string;
+        publisher: string;
+        annotation?: string;
+        year?: number;
+        photo_path?: string;
+      }>(`/archives/${archiveId}/books`, { method: 'POST', body: JSON.stringify(data) }),
     update: (id: number, data: Record<string, unknown>) =>
       request(`/books/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: number) => request(`/books/${id}`, { method: 'DELETE' }),
