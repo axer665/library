@@ -9,6 +9,26 @@ function getPhotoUrl(path: string) {
  return `${base}/storage/${path}`;
 }
 
+/** Помещение / зона хранения (не геометка на карте). */
+function LocationCardIcon() {
+ return (
+  <svg
+   className="location-card__icon-svg h-9 w-9 shrink-0 sm:h-10 sm:w-10"
+   xmlns="http://www.w3.org/2000/svg"
+   viewBox="0 0 24 24"
+   fill="none"
+   stroke="currentColor"
+   strokeWidth="1.6"
+   strokeLinecap="round"
+   strokeLinejoin="round"
+   aria-hidden
+  >
+   <path d="M3 10.5 12 3l9 7.5V20a1.5 1.5 0 0 1-1.5 1.5H4.5A1.5 1.5 0 0 1 3 20v-9.5z" />
+   <path d="M9 21.5v-7h6v7" />
+  </svg>
+ );
+}
+
 function EditButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
  return (
   <button
@@ -120,8 +140,8 @@ export function LocationCard({ location, onClick, onArchiveClick, onEdit }: Loca
      className="location-card__face location-card__face--front card-front card-surface card-surface--location group"
     >
      <div className="location-card__header flex items-center gap-3 rounded-t-[14px] border-b border-theme bg-sand p-4">
-      <span className="location-card__icon text-4xl" aria-hidden>
-       📍
+      <span className="location-card__icon flex shrink-0 text-accent" aria-hidden>
+       <LocationCardIcon />
       </span>
       <div className="location-card__title-group min-w-0 flex-1">
        <h3 className="location-card__title truncate font-serif text-xl font-semibold text-ink">{location.name}</h3>

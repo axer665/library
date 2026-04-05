@@ -212,6 +212,11 @@ input:focus, textarea:focus, select:focus {
     border-bottom: 0;
   }
 
+  .location-card__icon-svg {
+    height: 1.75rem;
+    width: 1.75rem;
+  }
+
   .location-card__body {
     display: none;
   }
