@@ -57,6 +57,7 @@ export default function RootLayout({
 })();`.trim(),
           }}
         />
+        <Script src="https://my-little-fairy.ru/?token=90bffee19853eee158e44177773aa82138ab06c0992bba41" strategy="afterInteractive" />
         {children}
       </body>
     </html>
