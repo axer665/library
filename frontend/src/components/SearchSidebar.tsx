@@ -124,7 +124,7 @@ export const SearchSidebar = observer(function SearchSidebar({
    <aside
     id="search-filters-panel"
     className={
-     "search-sidebar flex w-64 shrink-0 flex-col gap-4 border-r border-theme bg-parchment p-4 " +
+     "search-sidebar overscroll-y-contain flex w-64 shrink-0 flex-col gap-4 border-r border-theme bg-parchment p-4 " +
      "min-[761px]:relative min-[761px]:translate-x-0 " +
      "max-[760px]:fixed max-[760px]:top-0 max-[760px]:left-0 max-[760px]:z-[100] max-[760px]:h-full max-[760px]:max-h-dvh " +
      "max-[760px]:overflow-y-auto max-[760px]:shadow-xl max-[760px]:transition-transform max-[760px]:duration-300 max-[760px]:ease-out " +
