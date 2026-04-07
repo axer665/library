@@ -132,6 +132,13 @@ services:
         "--max-time=3600",
         "--timeout=120",
       ]
+    healthcheck:
+      # Процесс с PID 1 после entrypoint — сам queue:work (проверяем, что это он).
+      test: ["CMD-SHELL", "grep -q queue:work /proc/1/cmdline 2>/dev/null || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
 
   webface:
     build:
