@@ -432,17 +432,17 @@ function HomePageInner() {
             <div className="mx-auto w-full max-w-6xl px-6 py-12">
               <h2 className="font-serif text-3xl font-semibold">Как это работает</h2>
               <ol className="mt-6 grid gap-4 md:grid-cols-3">
-                <li className="rounded-xl border border-theme bg-white p-5">
+                <li className="rounded-xl border border-theme bg-parchment p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">Шаг 1</p>
                   <p className="mt-2 text-sm text-ink-muted">Создайте локации и добавьте в них архивы.</p>
                 </li>
-                <li className="rounded-xl border border-theme bg-white p-5">
+                <li className="rounded-xl border border-theme bg-parchment p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">Шаг 2</p>
                   <p className="mt-2 text-sm text-ink-muted">
                     Заполните карточки книг и прикрепите фото обложек.
                   </p>
                 </li>
-                <li className="rounded-xl border border-theme bg-white p-5">
+                <li className="rounded-xl border border-theme bg-parchment p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">Шаг 3</p>
                   <p className="mt-2 text-sm text-ink-muted">
                     Используйте поиск и фильтры для ежедневной работы.
