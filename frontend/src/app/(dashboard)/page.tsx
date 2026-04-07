@@ -428,7 +428,7 @@ function HomePageInner() {
             </div>
           </section>
 
-          <section className="border-t border-theme bg-parchment">
+          <section className="border-t border-theme bg-white">
             <div className="mx-auto w-full max-w-6xl px-6 py-12">
               <h2 className="font-serif text-3xl font-semibold">Как это работает</h2>
               <ol className="mt-6 grid gap-4 md:grid-cols-3">
