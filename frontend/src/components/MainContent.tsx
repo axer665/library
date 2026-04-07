@@ -73,7 +73,7 @@ export function MainContent({
   view === "locations" ? (
    <button
     onClick={onAddLocation}
-    className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+    className="ml-3 flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
    >
     <span>+</span>
     <span>Добавить локацию</span>
@@ -81,7 +81,7 @@ export function MainContent({
   ) : view === "archives" ? (
    <button
     onClick={onAddArchive}
-    className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+    className="ml-3 flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
    >
     <span>+</span>
     <span>Добавить архив</span>
@@ -89,7 +89,7 @@ export function MainContent({
   ) : (
    <button
     onClick={onAddBook}
-    className="flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+    className="ml-3 flex items-center gap-2 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
    >
     <span>+</span>
     <span>Добавить книгу</span>
