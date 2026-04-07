@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/authStore";
@@ -53,10 +54,29 @@ function HomePageInner() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [feedbackError, setFeedbackError] = useState("");
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
+  const [heroScrollY, setHeroScrollY] = useState(0);
+  const [heroReduceMotion, setHeroReduceMotion] = useState(false);
 
   useEffect(() => {
     setNavMounted(true);
   }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setHeroReduceMotion(mq.matches);
+    const onMq = () => setHeroReduceMotion(mq.matches);
+    mq.addEventListener("change", onMq);
+    return () => mq.removeEventListener("change", onMq);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setHeroScrollY(window.scrollY);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  const heroParallaxY = heroReduceMotion ? 0 : heroScrollY * 0.22;
 
   useEffect(() => {
     if (authStore.token) void authStore.syncUserFromApi();
@@ -288,35 +308,76 @@ function HomePageInner() {
         </header>
 
         <main className="flex-1">
-          <section className="mx-auto w-full max-w-6xl px-6 pb-16 pt-14">
-            <h1 className="max-w-3xl font-serif text-4xl font-semibold leading-tight">
-              Домашний книжный каталог
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg text-ink-muted">
-              Храните библиотеку структурировано, быстро находите книги и поддерживайте порядок в
-              архивах через единый интерфейс.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <button
-                type="button"
-                className="rounded-lg bg-accent px-5 py-3 text-sm font-medium text-white transition hover-bg-accent-hover"
-                onClick={() => {
-                  setError("");
-                  setAuthMode("register");
+          <section
+            className="relative isolate min-h-[min(28rem,78vh)] overflow-hidden"
+            aria-labelledby="landing-hero-heading"
+          >
+            <div
+              className="pointer-events-none absolute left-1/2 top-[-18%] w-[100vw] will-change-transform"
+              style={{
+                height: "145%",
+                transform: `translateX(-50%) translateY(${heroParallaxY}px) scale(1.04)`,
+              }}
+              aria-hidden
+            >
+              <Image
+                src="/images/landing-hero-bookshelf.png"
+                alt=""
+                fill
+                className="object-cover object-[55%_28%]"
+                sizes="100vw"
+                priority
+                quality={88}
+              />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background:
+                    "linear-gradient(180deg, rgba(250,248,245,0.91) 0%, rgba(245,240,232,0.8) 42%, rgba(250,248,245,0.93) 100%)",
                 }}
-              >
-                Начать работу
-              </button>
-              <button
-                type="button"
-                className="rounded-lg border border-theme px-5 py-3 text-sm font-medium text-ink transition hover-bg-sand"
-                onClick={() => {
-                  setError("");
-                  setAuthMode("login");
+              />
+              <div
+                className="absolute inset-0 opacity-40 mix-blend-multiply"
+                style={{
+                  background:
+                    "linear-gradient(135deg, rgba(232,242,239,0.55) 0%, transparent 55%, rgba(232,220,208,0.35) 100%)",
                 }}
+              />
+            </div>
+
+            <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-14">
+              <h1
+                id="landing-hero-heading"
+                className="max-w-3xl font-serif text-4xl font-semibold leading-tight text-ink drop-shadow-sm"
               >
-                Уже есть аккаунт
-              </button>
+                Домашний книжный каталог
+              </h1>
+              <p className="mt-5 max-w-2xl text-lg text-ink-muted drop-shadow-sm">
+                Храните библиотеку структурировано, быстро находите книги и поддерживайте порядок в
+                архивах через единый интерфейс.
+              </p>
+              <div className="mt-8 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  className="rounded-lg bg-accent px-5 py-3 text-sm font-medium text-white shadow-sm transition hover-bg-accent-hover"
+                  onClick={() => {
+                    setError("");
+                    setAuthMode("register");
+                  }}
+                >
+                  Начать работу
+                </button>
+                <button
+                  type="button"
+                  className="rounded-lg border border-theme bg-white/80 px-5 py-3 text-sm font-medium text-ink shadow-sm backdrop-blur-sm transition hover:bg-sand"
+                  onClick={() => {
+                    setError("");
+                    setAuthMode("login");
+                  }}
+                >
+                  Уже есть аккаунт
+                </button>
+              </div>
             </div>
           </section>
 
