@@ -36,6 +36,18 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+button:not(:disabled),
+input[type="button"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="reset"]:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+input:disabled {
+  cursor: not-allowed;
+}
+
 .font-serif {
   font-family: var(--font-literata), Georgia, serif;
 }

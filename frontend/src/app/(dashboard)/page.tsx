@@ -453,23 +453,19 @@ function HomePageInner() {
           </section>
         </main>
 
-        <footer className="border-t border-theme bg-white text-sm text-ink-light">
-          <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-center gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-            <p className="font-medium text-ink">catalogbooks</p>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setFeedbackOpen(true);
-                  setFeedbackError("");
-                  setFeedbackSuccess(false);
-                }}
-                className="text-accent transition hover:underline"
-              >
-                Обратная связь
-              </button>
-              <p>Каталог книг по локациям и архивам</p>
-            </div>
+        <footer className="border-t border-theme bg-parchment text-sm">
+          <div className="mx-auto flex w-full max-w-6xl justify-center px-6 py-4">
+            <button
+              type="button"
+              onClick={() => {
+                setFeedbackOpen(true);
+                setFeedbackError("");
+                setFeedbackSuccess(false);
+              }}
+              className="cursor-pointer text-accent transition hover:underline"
+            >
+              Обратная связь
+            </button>
           </div>
         </footer>
       </div>
@@ -666,7 +662,7 @@ function HomePageInner() {
       )}
 
       {feedbackOpen && (
-        <Modal title="Обратная связь" onClose={closeFeedback}>
+        <Modal title="Форма обратной связи" onClose={closeFeedback}>
           {feedbackSuccess ? (
             <div className="space-y-4">
               <p className="text-sm text-ink-muted">
@@ -682,20 +678,13 @@ function HomePageInner() {
             </div>
           ) : (
             <form onSubmit={onFeedbackSubmit} className="space-y-4">
+              <div className="rounded-lg border border-theme bg-parchment/80 px-3 py-2.5 text-xs leading-relaxed text-ink-muted">
+                Заметили сбой или некорректную работу сайта? Напишите об этом через эту форму —
+                администрация рассмотрит обращение и поможет устранить проблему.
+              </div>
               {feedbackError && (
                 <p className="rounded-lg bg-error px-3 py-2 text-sm text-error">{feedbackError}</p>
               )}
-              <div>
-                <label className="mb-1 block text-sm font-medium text-ink">Email</label>
-                <input
-                  type="email"
-                  value={feedbackForm.email}
-                  onChange={(e) => setFeedbackForm((p) => ({ ...p, email: e.target.value }))}
-                  className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
-                  required
-                  autoComplete="email"
-                />
-              </div>
               <div>
                 <label className="mb-1 block text-sm font-medium text-ink">Имя</label>
                 <input
@@ -705,6 +694,17 @@ function HomePageInner() {
                   className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
                   required
                   autoComplete="name"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink">Email</label>
+                <input
+                  type="email"
+                  value={feedbackForm.email}
+                  onChange={(e) => setFeedbackForm((p) => ({ ...p, email: e.target.value }))}
+                  className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
+                  required
+                  autoComplete="email"
                 />
               </div>
               <div>

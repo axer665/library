@@ -26,8 +26,9 @@ export function Modal({ title, children, onClose }: ModalProps) {
       {title}
      </h3>
      <button
+      type="button"
       onClick={onClose}
-      className="rounded-lg p-1 text-ink-light transition hover:bg-sand hover:text-ink"
+      className="cursor-pointer rounded-lg p-1 text-ink-light transition hover:bg-sand hover:text-ink"
       aria-label="Закрыть"
      >
       ✕
