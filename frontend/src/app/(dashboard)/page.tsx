@@ -235,7 +235,7 @@ function HomePageInner() {
                   <button
                     type="button"
                     onClick={() => setMenuOpen((o) => !o)}
-                    className="flex h-9 w-9 items-center justify-center rounded-lg border border-theme bg-white text-ink transition hover-border-accent hover:bg-accent-muted"
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-theme bg-white text-ink transition hover-border-accent hover:bg-accent-muted"
                     aria-expanded={menuOpen}
                     aria-haspopup="menu"
                     aria-label="Меню аккаунта"
@@ -359,7 +359,7 @@ function HomePageInner() {
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   type="button"
-                  className="rounded-lg bg-accent px-5 py-3 text-sm font-medium text-white shadow-sm transition hover-bg-accent-hover"
+                  className="cursor-pointer rounded-lg bg-accent px-5 py-3 text-sm font-medium text-white shadow-sm transition hover-bg-accent-hover"
                   onClick={() => {
                     setError("");
                     setAuthMode("register");
@@ -369,7 +369,7 @@ function HomePageInner() {
                 </button>
                 <button
                   type="button"
-                  className="rounded-lg border border-theme bg-white/80 px-5 py-3 text-sm font-medium text-ink shadow-sm backdrop-blur-sm transition hover:bg-sand"
+                  className="cursor-pointer rounded-lg border border-theme bg-white/80 px-5 py-3 text-sm font-medium text-ink shadow-sm backdrop-blur-sm transition hover:bg-sand"
                   onClick={() => {
                     setError("");
                     setAuthMode("login");
@@ -722,14 +722,14 @@ function HomePageInner() {
                 <button
                   type="submit"
                   disabled={feedbackLoading}
-                  className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
+                  className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {feedbackLoading ? "Отправка…" : "Отправить"}
                 </button>
                 <button
                   type="button"
                   onClick={closeFeedback}
-                  className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+                  className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
                 >
                   Отмена
                 </button>
