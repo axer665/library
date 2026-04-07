@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useRouter } from "next/navigation";
 import { MainContent } from "@/components/MainContent";
@@ -17,6 +17,7 @@ function DashboardPage({
  routeLoading?: boolean;
 }) {
  const router = useRouter();
+ const bookFormDomId = useId().replace(/:/g, "");
  const [modal, setModal] = useState<"location" | "archive" | "book" | "editLocation" | "editArchive" | "editBook" | null>(null);
  const [locationName, setLocationName] = useState("");
  const [archiveName, setArchiveName] = useState("");
@@ -313,6 +314,25 @@ function DashboardPage({
       setModal(null);
       setEditingLocation(null);
      }}
+     footer={
+      <div className="flex gap-2">
+       <button
+        type="button"
+        onClick={submitLocation}
+        disabled={!locationName.trim()}
+        className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+       >
+        {editingLocation ? "Сохранить" : "Создать"}
+       </button>
+       <button
+        type="button"
+        onClick={() => setModal(null)}
+        className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+       >
+        Отмена
+       </button>
+      </div>
+     }
     >
      <div className="space-y-4">
       <div>
@@ -327,21 +347,6 @@ function DashboardPage({
         onKeyDown={(e) => e.key === "Enter" && submitLocation()}
        />
       </div>
-      <div className="flex gap-2">
-       <button
-        onClick={submitLocation}
-        disabled={!locationName.trim()}
-        className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
-       >
-        {editingLocation ? "Сохранить" : "Создать"}
-       </button>
-       <button
-        onClick={() => setModal(null)}
-        className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
-       >
-        Отмена
-       </button>
-      </div>
      </div>
     </Modal>
    )}
@@ -354,6 +359,28 @@ function DashboardPage({
       setEditingArchive(null);
       setEditArchiveLocationId(null);
      }}
+     footer={
+      <div className="flex gap-2">
+       <button
+        type="button"
+        onClick={submitArchive}
+        disabled={
+         !archiveName.trim() ||
+         (!!editingArchive && editArchiveLocationId === null)
+        }
+        className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+       >
+        {editingArchive ? "Сохранить" : "Создать"}
+       </button>
+       <button
+        type="button"
+        onClick={() => setModal(null)}
+        className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+       >
+        Отмена
+       </button>
+      </div>
+     }
     >
      <div className="space-y-4">
       {editingArchive && (
@@ -391,24 +418,6 @@ function DashboardPage({
         onKeyDown={(e) => e.key === "Enter" && submitArchive()}
        />
       </div>
-      <div className="flex gap-2">
-       <button
-        onClick={submitArchive}
-        disabled={
-         !archiveName.trim() ||
-         (!!editingArchive && editArchiveLocationId === null)
-        }
-        className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
-       >
-        {editingArchive ? "Сохранить" : "Создать"}
-       </button>
-       <button
-        onClick={() => setModal(null)}
-        className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
-       >
-        Отмена
-       </button>
-      </div>
      </div>
     </Modal>
    )}
@@ -416,6 +425,7 @@ function DashboardPage({
    {(modal === "book" || modal === "editBook") && (
     <Modal
      title={editingBook ? "Редактировать книгу" : "Новая книга"}
+     size="lg"
      onClose={() => {
       setModal(null);
       setEditingBook(null);
@@ -423,8 +433,36 @@ function DashboardPage({
       setBookEditArchiveId(null);
       setBookEditArchivesList([]);
      }}
+     footer={
+      <div className="flex gap-2">
+       <button
+        type="submit"
+        form={bookFormDomId}
+        disabled={
+         !bookForm.author.trim() ||
+         !bookForm.title.trim() ||
+         !bookForm.publisher.trim() ||
+         (!!editingBook &&
+          (bookEditArchiveId === null ||
+           bookEditLocationId === null ||
+           bookEditArchivesList.length === 0))
+        }
+        className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+       >
+        {editingBook ? "Сохранить" : "Создать"}
+       </button>
+       <button
+        type="button"
+        onClick={() => setModal(null)}
+        className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+       >
+        Отмена
+       </button>
+      </div>
+     }
     >
      <form
+      id={bookFormDomId}
       onSubmit={(e) => {
        e.preventDefault();
        submitBook();
@@ -551,30 +589,6 @@ function DashboardPage({
        {bookForm.photo && (
         <p className="mt-1 text-xs text-ink-muted">Выбрано: {bookForm.photo.name}</p>
        )}
-      </div>
-      <div className="flex gap-2">
-       <button
-        type="submit"
-        disabled={
-         !bookForm.author.trim() ||
-         !bookForm.title.trim() ||
-         !bookForm.publisher.trim() ||
-         (!!editingBook &&
-          (bookEditArchiveId === null ||
-           bookEditLocationId === null ||
-           bookEditArchivesList.length === 0))
-        }
-        className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
-       >
-        {editingBook ? "Сохранить" : "Создать"}
-       </button>
-       <button
-        type="button"
-        onClick={() => setModal(null)}
-        className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
-       >
-        Отмена
-       </button>
       </div>
      </form>
     </Modal>

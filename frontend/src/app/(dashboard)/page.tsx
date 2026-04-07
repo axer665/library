@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -34,6 +34,7 @@ function MenuIcon() {
 function HomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const feedbackFormDomId = useId().replace(/:/g, "");
   const [navMounted, setNavMounted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -662,22 +663,51 @@ function HomePageInner() {
       )}
 
       {feedbackOpen && (
-        <Modal title="Форма обратной связи" onClose={closeFeedback}>
+        <Modal
+          title="Форма обратной связи"
+          onClose={closeFeedback}
+          footer={
+            feedbackSuccess ? (
+              <button
+                type="button"
+                onClick={closeFeedback}
+                className="w-full cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+              >
+                Закрыть
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  form={feedbackFormDomId}
+                  disabled={feedbackLoading}
+                  className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {feedbackLoading ? "Отправка…" : "Отправить"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeFeedback}
+                  className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+                >
+                  Отмена
+                </button>
+              </div>
+            )
+          }
+        >
           {feedbackSuccess ? (
             <div className="space-y-4">
               <p className="text-sm text-ink-muted">
                 Спасибо, сообщение отправлено. Мы ответим на указанный email при необходимости.
               </p>
-              <button
-                type="button"
-                onClick={closeFeedback}
-                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
-              >
-                Закрыть
-              </button>
             </div>
           ) : (
-            <form onSubmit={onFeedbackSubmit} className="space-y-4">
+            <form
+              id={feedbackFormDomId}
+              onSubmit={onFeedbackSubmit}
+              className="space-y-4"
+            >
               <div className="rounded-lg border border-theme bg-parchment/80 px-3 py-2.5 text-xs leading-relaxed text-ink-muted">
                 Заметили сбой или некорректную работу сайта? Напишите об этом через эту форму —
                 администрация рассмотрит обращение и поможет устранить проблему.
@@ -717,22 +747,6 @@ function HomePageInner() {
                   required
                   maxLength={5000}
                 />
-              </div>
-              <div className="flex gap-2">
-                <button
-                  type="submit"
-                  disabled={feedbackLoading}
-                  className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {feedbackLoading ? "Отправка…" : "Отправить"}
-                </button>
-                <button
-                  type="button"
-                  onClick={closeFeedback}
-                  className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
-                >
-                  Отмена
-                </button>
               </div>
             </form>
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { SearchView } from "@/components/SearchView";
 import { Modal } from "@/components/Modal";
@@ -9,6 +9,7 @@ import type { Archive, Book } from "@/stores/catalogStore";
 import { api } from "@/lib/api";
 
 function SearchPage() {
+ const bookFormDomId = useId().replace(/:/g, "");
  const [modal, setModal] = useState<"editBook" | null>(null);
  const [editingBook, setEditingBook] = useState<Book | null>(null);
  const [bookForm, setBookForm] = useState({
@@ -126,6 +127,7 @@ function SearchPage() {
    {modal === "editBook" && editingBook && (
     <Modal
      title="Редактировать книгу"
+     size="lg"
      onClose={() => {
       setModal(null);
       setEditingBook(null);
@@ -133,8 +135,35 @@ function SearchPage() {
       setBookEditArchiveId(null);
       setBookEditArchivesList([]);
      }}
+     footer={
+      <div className="flex gap-2">
+       <button
+        type="submit"
+        form={bookFormDomId}
+        disabled={
+         !bookForm.author.trim() ||
+         !bookForm.title.trim() ||
+         !bookForm.publisher.trim() ||
+         bookEditArchiveId == null ||
+         bookEditLocationId == null ||
+         bookEditArchivesList.length === 0
+        }
+        className="flex-1 cursor-pointer rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+       >
+        Сохранить
+       </button>
+       <button
+        type="button"
+        onClick={() => setModal(null)}
+        className="cursor-pointer rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+       >
+        Отмена
+       </button>
+      </div>
+     }
     >
      <form
+      id={bookFormDomId}
       onSubmit={(e) => {
        e.preventDefault();
        submitBook();
@@ -246,29 +275,6 @@ function SearchPage() {
         onChange={(e) => setBookForm((p) => ({ ...p, photo: e.target.files?.[0] ?? null }))}
         className="w-full rounded-lg border border-theme px-3 py-2 text-sm text-ink"
        />
-      </div>
-      <div className="flex gap-2">
-       <button
-        type="submit"
-        disabled={
-         !bookForm.author.trim() ||
-         !bookForm.title.trim() ||
-         !bookForm.publisher.trim() ||
-         bookEditArchiveId == null ||
-         bookEditLocationId == null ||
-         bookEditArchivesList.length === 0
-        }
-        className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover-bg-accent-hover disabled:opacity-50"
-       >
-        Сохранить
-       </button>
-       <button
-        type="button"
-        onClick={() => setModal(null)}
-        className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink"
-       >
-        Отмена
-       </button>
       </div>
      </form>
     </Modal>
