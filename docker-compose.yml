@@ -21,6 +21,23 @@ services:
     networks:
       - library_net
 
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: library_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: library_mq
+      RABBITMQ_DEFAULT_PASS: library_mq_password
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - library_net
+
   backend:
     build:
       context: ./backend
@@ -44,11 +61,77 @@ services:
       DB_PASSWORD: library_password
       # HS256 (Lcobucci): минимум 32 байта в строке ключа; старый дефолт был короче и давал JWTException
       JWT_SECRET: ${JWT_SECRET:-LibraryCatalog_dev_jwt_hmac_key_at_least_32_bytes_long_ok}
+      QUEUE_CONNECTION: rabbitmq
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: library_mq
+      RABBITMQ_PASSWORD: library_mq_password
+      RABBITMQ_VHOST: /
+      RABBITMQ_QUEUE: default
     depends_on:
       postgres:
         condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     networks:
       - library_net
+
+  queue-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: library_queue_worker
+    working_dir: /var/www/html
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/storage:/var/www/html/storage
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: ${APP_URL:-http://localhost}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: library_catalog
+      DB_USERNAME: library_user
+      DB_PASSWORD: library_password
+      JWT_SECRET: ${JWT_SECRET:-LibraryCatalog_dev_jwt_hmac_key_at_least_32_bytes_long_ok}
+      QUEUE_CONNECTION: rabbitmq
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: library_mq
+      RABBITMQ_PASSWORD: library_mq_password
+      RABBITMQ_VHOST: /
+      RABBITMQ_QUEUE: default
+      MAIL_MAILER: ${MAIL_MAILER:-smtp}
+      MAIL_HOST: ${MAIL_HOST:-smtp.hosting.reg.ru}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_ENCRYPTION: ${MAIL_ENCRYPTION:-tls}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-LibraryCatalog}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - library_net
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    command:
+      [
+        "php",
+        "artisan",
+        "queue:work",
+        "rabbitmq",
+        "--queue=registration,feedback",
+        "--sleep=3",
+        "--tries=3",
+        "--max-time=3600",
+        "--timeout=120",
+      ]
 
   webface:
     build:

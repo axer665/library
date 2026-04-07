@@ -142,8 +142,12 @@ function HomePageInner() {
     const email = feedbackForm.email.trim();
     const name = feedbackForm.name.trim();
     const message = feedbackForm.message.trim();
-    if (!email || !name || !message) {
-      setFeedbackError("Заполните все поля.");
+    if (!email) {
+      setFeedbackError("Укажите email — на него можно будет ответить.");
+      return;
+    }
+    if (!name || !message) {
+      setFeedbackError("Заполните имя и текст сообщения.");
       return;
     }
     setFeedbackLoading(true);
@@ -727,7 +731,9 @@ function HomePageInner() {
                 />
               </div>
               <div>
-                <label className="mb-1 block text-sm font-medium text-ink">Email</label>
+                <label className="mb-1 block text-sm font-medium text-ink">
+                  Email <span className="text-error">*</span>
+                </label>
                 <input
                   type="email"
                   value={feedbackForm.email}
@@ -735,6 +741,8 @@ function HomePageInner() {
                   className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
                   required
                   autoComplete="email"
+                  inputMode="email"
+                  aria-required="true"
                 />
               </div>
               <div>

@@ -13,6 +13,9 @@ return [
     |
     */
 
+    /*
+    | В Docker с RabbitMQ: QUEUE_CONNECTION=rabbitmq. Локально без брокера можно оставить sync.
+    */
     'default' => env('QUEUE_CONNECTION', 'sync'),
 
     /*

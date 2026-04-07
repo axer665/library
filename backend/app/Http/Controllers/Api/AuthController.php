@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendRegistrationVerificationJob;
 use App\Models\User;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\JsonResponse;
@@ -28,7 +29,7 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        $user->sendEmailVerificationNotification();
+        SendRegistrationVerificationJob::dispatch($user->id);
 
         $token = auth('api')->login($user);
 
@@ -156,7 +157,7 @@ class AuthController extends Controller
             return response()->json(['message' => 'Адрес email уже подтверждён.']);
         }
 
-        $user->sendEmailVerificationNotification();
+        SendRegistrationVerificationJob::dispatch($user->id);
 
         return response()->json(['message' => 'Мы отправили письмо со ссылкой ещё раз.']);
     }

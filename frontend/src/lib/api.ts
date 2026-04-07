@@ -105,12 +105,19 @@ async function request<T>(
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    const firstFieldError =
+      data.errors != null &&
+      typeof data.errors === 'object' &&
+      !Array.isArray(data.errors)
+        ? (Object.values(data.errors).flat().find((x) => typeof x === 'string') as
+            | string
+            | undefined)
+        : undefined;
     const msg =
-      typeof data.message === 'string'
-        ? data.message
-        : data.errors != null
-          ? JSON.stringify(data.errors)
-          : 'Request failed';
+      firstFieldError ??
+      (typeof data.message === 'string' ? data.message : null) ??
+      (data.errors != null ? JSON.stringify(data.errors) : null) ??
+      'Request failed';
     throw new Error(msg);
   }
 
