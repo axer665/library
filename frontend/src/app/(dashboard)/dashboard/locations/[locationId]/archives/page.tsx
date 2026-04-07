@@ -34,10 +34,17 @@ export default function LocationArchivesRoutePage({
       catalogStore.selectedLocationId === locationId && catalogStore.archives.length > 0;
     setRouteLoading(!warm);
 
-    void catalogStore.loadArchives(locationId, { trackLoading: false }).finally(() => {
-      // Покажем контент, когда MobX закончит загрузку
-      setRouteLoading(false);
-    });
+    void (async () => {
+      try {
+        // F5 по URL: без списка локаций крошки не найдут название — подгружаем индекс локаций.
+        if (catalogStore.locations.length === 0) {
+          await catalogStore.loadLocations();
+        }
+        await catalogStore.loadArchives(locationId, { trackLoading: false });
+      } finally {
+        setRouteLoading(false);
+      }
+    })();
   }, [locationId]);
 
   return <DashboardPage forceView="archives" routeLoading={routeLoading} />;

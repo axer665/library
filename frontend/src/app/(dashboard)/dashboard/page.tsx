@@ -255,9 +255,6 @@ function DashboardPage({
 
  const isRouteLoading = routeLoading ?? false;
 
- const selectedLocationNameForUi = isRouteLoading ? undefined : selectedLocationName;
- const selectedArchiveNameForUi = isRouteLoading ? undefined : selectedArchiveName;
-
  const derivedView = !catalogStore.selectedLocationId
   ? "locations"
   : !catalogStore.selectedArchiveId
@@ -278,8 +275,8 @@ function DashboardPage({
     locations={catalogStore.locations}
     archives={catalogStore.archives}
     books={catalogStore.books}
-    selectedLocationName={selectedLocationNameForUi}
-    selectedArchiveName={selectedArchiveNameForUi}
+    selectedLocationName={selectedLocationName}
+    selectedArchiveName={selectedArchiveName}
     onSelectLocation={handleSelectLocation}
     onSelectArchive={handleSelectArchive}
     onArchiveClick={handleArchiveClick}

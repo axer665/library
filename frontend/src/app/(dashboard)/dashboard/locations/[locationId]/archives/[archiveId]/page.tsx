@@ -39,11 +39,16 @@ export default function LocationArchiveBooksRoutePage({
       catalogStore.books.length > 0;
     setRouteLoading(!warm);
 
-    void catalogStore
-      .selectLocationAndArchive(locationId, archiveId, { trackLoading: false })
-      .finally(() => {
+    void (async () => {
+      try {
+        if (catalogStore.locations.length === 0) {
+          await catalogStore.loadLocations();
+        }
+        await catalogStore.selectLocationAndArchive(locationId, archiveId, { trackLoading: false });
+      } finally {
         setRouteLoading(false);
-      });
+      }
+    })();
   }, [locationId, archiveId]);
 
   return <DashboardPage forceView="books" routeLoading={routeLoading} />;
