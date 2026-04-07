@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\LocationController;
 use App\Http\Controllers\Api\ArchiveController;
 use App\Http\Controllers\Api\BookController;
 use App\Http\Controllers\Api\BookSearchController;
+use App\Http\Controllers\Api\FeedbackController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -16,6 +17,9 @@ Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'
     ->middleware('throttle:5,1');
 Route::post('/reset-password', [PasswordResetController::class, 'reset'])
     ->middleware('throttle:6,1');
+
+Route::post('/feedback', [FeedbackController::class, 'store'])
+    ->middleware('throttle:20,1');
 
 Route::get('/email/verify/{id}/{hash}', [AuthController::class, 'verifyEmail'])
     ->middleware(['signed', 'throttle:6,1'])

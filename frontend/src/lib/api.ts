@@ -105,13 +105,27 @@ async function request<T>(
 
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    throw new Error(data.message || data.errors ? JSON.stringify(data.errors) : 'Request failed');
+    const msg =
+      typeof data.message === 'string'
+        ? data.message
+        : data.errors != null
+          ? JSON.stringify(data.errors)
+          : 'Request failed';
+    throw new Error(msg);
   }
 
   return data as T;
 }
 
 export const api = {
+  feedback: {
+    submit: (data: { email: string; name: string; message: string }) =>
+      request<{ message: string }>('/feedback', {
+        method: 'POST',
+        body: JSON.stringify(data),
+        noAuth: true,
+      }),
+  },
   auth: {
     register: (data: { name: string; email: string; password: string; password_confirmation: string }) =>
       request<{

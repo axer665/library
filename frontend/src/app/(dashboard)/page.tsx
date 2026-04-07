@@ -48,6 +48,11 @@ function HomePageInner() {
     password: "",
     passwordConfirmation: "",
   });
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [feedbackForm, setFeedbackForm] = useState({ email: "", name: "", message: "" });
+  const [feedbackLoading, setFeedbackLoading] = useState(false);
+  const [feedbackError, setFeedbackError] = useState("");
+  const [feedbackSuccess, setFeedbackSuccess] = useState(false);
 
   useEffect(() => {
     setNavMounted(true);
@@ -101,6 +106,35 @@ function HomePageInner() {
     setError("");
     setForgotSent(false);
     router.replace("/");
+  };
+
+  const closeFeedback = () => {
+    setFeedbackOpen(false);
+    setFeedbackError("");
+    setFeedbackSuccess(false);
+    setFeedbackForm({ email: "", name: "", message: "" });
+  };
+
+  const onFeedbackSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFeedbackError("");
+    const email = feedbackForm.email.trim();
+    const name = feedbackForm.name.trim();
+    const message = feedbackForm.message.trim();
+    if (!email || !name || !message) {
+      setFeedbackError("Заполните все поля.");
+      return;
+    }
+    setFeedbackLoading(true);
+    try {
+      await api.feedback.submit({ email, name, message });
+      setFeedbackSuccess(true);
+      setFeedbackForm({ email: "", name: "", message: "" });
+    } catch (err: unknown) {
+      setFeedbackError(err instanceof Error ? err.message : "Не удалось отправить сообщение");
+    } finally {
+      setFeedbackLoading(false);
+    }
   };
 
   const title = useMemo(() => {
@@ -358,10 +392,23 @@ function HomePageInner() {
           </section>
         </main>
 
-        <footer className="h-16 border-t border-theme bg-white text-sm text-ink-light">
-          <div className="mx-auto flex h-full w-full max-w-6xl items-center justify-between px-6">
-            <p>LibraryCatalog</p>
-            <p>Каталог книг по локациям и архивам</p>
+        <footer className="border-t border-theme bg-white text-sm text-ink-light">
+          <div className="mx-auto flex w-full max-w-6xl flex-col items-start justify-center gap-3 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="font-medium text-ink">catalogbooks</p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setFeedbackOpen(true);
+                  setFeedbackError("");
+                  setFeedbackSuccess(false);
+                }}
+                className="text-accent transition hover:underline"
+              >
+                Обратная связь
+              </button>
+              <p>Каталог книг по локациям и архивам</p>
+            </div>
           </div>
         </footer>
       </div>
@@ -552,6 +599,80 @@ function HomePageInner() {
                   Войти
                 </button>
               </p>
+            </form>
+          )}
+        </Modal>
+      )}
+
+      {feedbackOpen && (
+        <Modal title="Обратная связь" onClose={closeFeedback}>
+          {feedbackSuccess ? (
+            <div className="space-y-4">
+              <p className="text-sm text-ink-muted">
+                Спасибо, сообщение отправлено. Мы ответим на указанный email при необходимости.
+              </p>
+              <button
+                type="button"
+                onClick={closeFeedback}
+                className="w-full rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+              >
+                Закрыть
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={onFeedbackSubmit} className="space-y-4">
+              {feedbackError && (
+                <p className="rounded-lg bg-error px-3 py-2 text-sm text-error">{feedbackError}</p>
+              )}
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink">Email</label>
+                <input
+                  type="email"
+                  value={feedbackForm.email}
+                  onChange={(e) => setFeedbackForm((p) => ({ ...p, email: e.target.value }))}
+                  className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
+                  required
+                  autoComplete="email"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink">Имя</label>
+                <input
+                  type="text"
+                  value={feedbackForm.name}
+                  onChange={(e) => setFeedbackForm((p) => ({ ...p, name: e.target.value }))}
+                  className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
+                  required
+                  autoComplete="name"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-ink">Сообщение</label>
+                <textarea
+                  value={feedbackForm.message}
+                  onChange={(e) => setFeedbackForm((p) => ({ ...p, message: e.target.value }))}
+                  className="w-full rounded-lg border border-theme px-3 py-2 text-ink"
+                  rows={5}
+                  required
+                  maxLength={5000}
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="submit"
+                  disabled={feedbackLoading}
+                  className="flex-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover disabled:opacity-50"
+                >
+                  {feedbackLoading ? "Отправка…" : "Отправить"}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeFeedback}
+                  className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover:bg-sand"
+                >
+                  Отмена
+                </button>
+              </div>
             </form>
           )}
         </Modal>
