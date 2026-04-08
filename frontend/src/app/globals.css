@@ -22,7 +22,7 @@
   --color-background: var(--color-cream);
   --color-foreground: var(--color-ink);
   --font-sans: var(--font-source-sans);
-  --font-serif: var(--font-literata);
+  --font-serif: var(--font-cormorant);
 }
 
 * {
@@ -49,7 +49,8 @@ input:disabled {
 }
 
 .font-serif {
-  font-family: var(--font-literata), Georgia, serif;
+  font-family: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  letter-spacing: -0.0125em;
 }
 
 /* Theme utility classes (без var(...) в JSX className) */

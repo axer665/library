@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Literata, Source_Sans_3 } from "next/font/google";
+import { Cormorant, Source_Sans_3 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
-const literata = Literata({
-  variable: "--font-literata",
+/** Заголовки: выразительная антиква в книжном духе (кириллица + латиница). */
+const cormorant = Cormorant({
+  variable: "--font-cormorant",
   subsets: ["latin", "cyrillic"],
   display: "swap",
+  weight: ["500", "600", "700"],
 });
 
 const sourceSans = Source_Sans_3({
@@ -36,7 +38,7 @@ export default function RootLayout({
     <html lang="ru" suppressHydrationWarning>
       <body
         suppressHydrationWarning
-        className={`${literata.variable} ${sourceSans.variable} antialiased`}
+        className={`${cormorant.variable} ${sourceSans.variable} antialiased`}
       >
         <Script
           id="disable-react-devtools"
