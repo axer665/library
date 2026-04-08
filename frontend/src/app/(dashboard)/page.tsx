@@ -394,7 +394,19 @@ function HomePageInner() {
                 </p>
               </article>
               <article className="landing__article landing__article--persona rounded-xl border border-theme bg-white p-5">
-                <h3 className="font-serif text-xl font-semibold">Частные коллекции</h3>
+                <h3 className="font-serif text-xl font-semibold">
+                <button
+                    type="button"
+                    className="-mx-1 w-[calc(100%+0.5rem)] cursor-pointer rounded px-1 text-left font-[inherit] font-semibold text-inherit transition hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35"
+                    onClick={() => {
+                      const w = window as Window & {
+                        myLittleFairyWidget?: { show: (click: string) => void };
+                      };
+                      w.myLittleFairyWidget?.show("click");
+                    }}
+                  >Частные коллекции
+                  </button>
+                  </h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   Держите личную библиотеку в порядке и легко находите редкие или забытые издания.
                 </p>
