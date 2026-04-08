@@ -52,46 +52,6 @@ input:disabled {
   font-family: var(--font-literata), Georgia, serif;
 }
 
-/* Посадочная (.landing): лёгкий наклон по часовой / против на при hover (чередование по позиции). */
-.landing__article,
-.landing__step {
-  transition: transform 0.22s ease;
-  transform-origin: center center;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .landing__section--features .landing__article:nth-child(1):hover,
-  .landing__section--audience .landing__article:nth-child(1):hover,
-  .landing__step--1:hover {
-    transform: scale(1.02) rotate(1.2deg);
-  }
-
-  .landing__section--features .landing__article:nth-child(2):hover,
-  .landing__section--audience .landing__article:nth-child(2):hover,
-  .landing__step--2:hover {
-    transform: scale(1.02) rotate(-1.25deg);
-  }
-
-  .landing__section--features .landing__article:nth-child(3):hover,
-  .landing__section--audience .landing__article:nth-child(3):hover,
-  .landing__step--3:hover {
-    transform: scale(1.02) rotate(1.35deg);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .landing__article,
-  .landing__step {
-    transition: none;
-  }
-
-  .landing__section--features .landing__article:hover,
-  .landing__section--audience .landing__article:hover,
-  .landing__step:hover {
-    transform: none;
-  }
-}
-
 /* Theme utility classes (без var(...) в JSX className) */
 .text-ink { color: var(--color-ink); }
 .text-ink-muted { color: var(--color-ink-muted); }
@@ -425,4 +385,50 @@ input:focus, textarea:focus, select:focus {
 /* Оборотная сторона — изначально смотрит назад (скрыта) */
 .card-back {
   transform: rotateY(180deg) translateZ(0.1px);
+}
+
+/*
+ * Посадочная (.landing): карточки — лёгкий scale + rotate при :hover.
+ * В конце файла, чтобы перекрыть утилиты Tailwind. Без (pointer: fine) — иначе эффект
+ * часто не срабатывает на гибридных ПК / в части браузеров.
+ */
+.landing .landing__article,
+.landing .landing__step {
+  transition: transform 0.22s ease;
+  transform-origin: center center;
+}
+
+.landing .landing__section--features .landing__article:nth-child(1):hover,
+.landing .landing__section--audience .landing__article:nth-child(1):hover,
+.landing .landing__step--1:hover {
+  transform: scale(1.02) rotate(1.2deg) !important;
+  z-index: 1;
+}
+
+.landing .landing__section--features .landing__article:nth-child(2):hover,
+.landing .landing__section--audience .landing__article:nth-child(2):hover,
+.landing .landing__step--2:hover {
+  transform: scale(1.02) rotate(-1.25deg) !important;
+  z-index: 1;
+}
+
+.landing .landing__section--features .landing__article:nth-child(3):hover,
+.landing .landing__section--audience .landing__article:nth-child(3):hover,
+.landing .landing__step--3:hover {
+  transform: scale(1.02) rotate(1.35deg) !important;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing .landing__article,
+  .landing .landing__step {
+    transition: none;
+  }
+
+  .landing .landing__section--features .landing__article:hover,
+  .landing .landing__section--audience .landing__article:hover,
+  .landing .landing__step:hover {
+    transform: none;
+    z-index: auto;
+  }
 }
