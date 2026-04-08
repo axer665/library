@@ -190,7 +190,7 @@ function HomePageInner() {
 
   return (
     <>
-      <div className="flex min-h-screen flex-col bg-cream text-ink">
+      <div className="landing flex min-h-screen flex-col bg-cream text-ink">
         <header className="border-b border-theme bg-parchment">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
             <BrandLogo href="/" />
@@ -276,7 +276,7 @@ function HomePageInner() {
 
         <main className="flex-1">
           <section
-            className="relative isolate min-h-[min(28rem,78vh)] overflow-hidden"
+            className="landing__section landing__section--hero relative isolate min-h-[min(28rem,78vh)] overflow-hidden"
             aria-labelledby="landing-hero-heading"
           >
             <div
@@ -348,21 +348,21 @@ function HomePageInner() {
             </div>
           </section>
 
-          <section className="border-y border-theme bg-white">
+          <section className="landing__section landing__section--features border-y border-theme bg-white">
             <div className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-12 md:grid-cols-3">
-              <article className="rounded-xl border border-theme bg-parchment p-5">
+              <article className="landing__article landing__article--feature rounded-xl border border-theme bg-parchment p-5">
                 <h2 className="font-serif text-xl font-semibold">Локации</h2>
                 <p className="mt-2 text-sm text-ink-muted">
                   Разделяйте фонд по кабинетам, залам или полкам, чтобы не терять контекст.
                 </p>
               </article>
-              <article className="rounded-xl border border-theme bg-parchment p-5">
+              <article className="landing__article landing__article--feature rounded-xl border border-theme bg-parchment p-5">
                 <h2 className="font-serif text-xl font-semibold">Архивы</h2>
                 <p className="mt-2 text-sm text-ink-muted">
                   Группируйте книги по архивам внутри локаций и просматривайте статистику.
                 </p>
               </article>
-              <article className="rounded-xl border border-theme bg-parchment p-5">
+              <article className="landing__article landing__article--feature rounded-xl border border-theme bg-parchment p-5">
                 <h2 className="font-serif text-xl font-semibold">Поиск</h2>
                 <p className="mt-2 text-sm text-ink-muted">
                   Находите нужную книгу по автору, названию, издательству и другим фильтрам.
@@ -371,22 +371,22 @@ function HomePageInner() {
             </div>
           </section>
 
-          <section className="mx-auto w-full max-w-6xl px-6 py-12">
+          <section className="landing__section landing__section--audience mx-auto w-full max-w-6xl px-6 py-12">
             <h2 className="font-serif text-3xl font-semibold">Для кого это полезно</h2>
             <div className="mt-6 grid gap-6 md:grid-cols-3">
-              <article className="rounded-xl border border-theme bg-white p-5">
+              <article className="landing__article landing__article--persona rounded-xl border border-theme bg-white p-5">
                 <h3 className="font-serif text-xl font-semibold">Школьные библиотеки</h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   Контролируйте фонд по кабинетам и быстро готовьте списки для учебного процесса.
                 </p>
               </article>
-              <article className="rounded-xl border border-theme bg-white p-5">
+              <article className="landing__article landing__article--persona rounded-xl border border-theme bg-white p-5">
                 <h3 className="font-serif text-xl font-semibold">Частные коллекции</h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   Держите личную библиотеку в порядке и легко находите редкие или забытые издания.
                 </p>
               </article>
-              <article className="rounded-xl border border-theme bg-white p-5">
+              <article className="landing__article landing__article--persona rounded-xl border border-theme bg-white p-5">
                 <h3 className="font-serif text-xl font-semibold">Небольшие архивы</h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   Ведите учёт архивных книг с понятной структурой и прозрачным доступом к данным.
@@ -395,21 +395,21 @@ function HomePageInner() {
             </div>
           </section>
 
-          <section className="border-t border-theme bg-white">
+          <section className="landing__section landing__section--how border-t border-theme bg-white">
             <div className="mx-auto w-full max-w-6xl px-6 py-12">
               <h2 className="font-serif text-3xl font-semibold">Как это работает</h2>
               <ol className="mt-6 grid gap-4 md:grid-cols-3">
-                <li className="rounded-xl border border-theme bg-parchment p-5">
+                <li className="landing__step landing__step--1 rounded-xl border border-theme bg-parchment p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">Шаг 1</p>
                   <p className="mt-2 text-sm text-ink-muted">Создайте локации и добавьте в них архивы.</p>
                 </li>
-                <li className="rounded-xl border border-theme bg-parchment p-5">
+                <li className="landing__step landing__step--2 rounded-xl border border-theme bg-parchment p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">Шаг 2</p>
                   <p className="mt-2 text-sm text-ink-muted">
                     Заполните карточки книг и прикрепите фото обложек.
                   </p>
                 </li>
-                <li className="rounded-xl border border-theme bg-parchment p-5">
+                <li className="landing__step landing__step--3 rounded-xl border border-theme bg-parchment p-5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-ink-light">Шаг 3</p>
                   <p className="mt-2 text-sm text-ink-muted">
                     Используйте поиск и фильтры для ежедневной работы.
