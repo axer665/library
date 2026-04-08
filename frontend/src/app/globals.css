@@ -431,17 +431,3 @@ input:focus, textarea:focus, select:focus {
   z-index: 1;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .landing .landing__article,
-  .landing .landing__step {
-    transition: none;
-  }
-
-  .landing .landing__section--features .landing__article:hover,
-  .landing .landing__section--audience .landing__article:hover,
-  .landing .landing__step:hover {
-    transform: none;
-    box-shadow: 0 1px 3px rgba(44, 36, 25, 0.08);
-    z-index: auto;
-  }
-}
