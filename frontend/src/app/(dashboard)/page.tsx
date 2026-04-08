@@ -57,10 +57,24 @@ function HomePageInner() {
   const [feedbackSuccess, setFeedbackSuccess] = useState(false);
   const [heroScrollY, setHeroScrollY] = useState(0);
   const [heroReduceMotion, setHeroReduceMotion] = useState(false);
+  /** Чтобы не сбрасывать текст сообщения при повторных срабатываниях observer/store для того же user.id. */
+  const feedbackPrefilledForUserId = useRef<number | null>(null);
 
   useEffect(() => {
     setNavMounted(true);
   }, []);
+
+  useEffect(() => {
+    if (!feedbackOpen) {
+      feedbackPrefilledForUserId.current = null;
+      return;
+    }
+    const u = authStore.user;
+    if (!u) return;
+    if (feedbackPrefilledForUserId.current === u.id) return;
+    feedbackPrefilledForUserId.current = u.id;
+    setFeedbackForm({ email: u.email, name: u.name, message: "" });
+  }, [feedbackOpen, authStore.user]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -463,9 +477,9 @@ function HomePageInner() {
             <button
               type="button"
               onClick={() => {
-                setFeedbackOpen(true);
                 setFeedbackError("");
                 setFeedbackSuccess(false);
+                setFeedbackOpen(true);
               }}
               className="cursor-pointer text-accent transition hover:underline"
             >
