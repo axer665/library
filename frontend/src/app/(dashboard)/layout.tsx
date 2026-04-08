@@ -6,7 +6,7 @@ import { observer } from "mobx-react-lite";
 import { authStore } from "@/stores/authStore";
 import { useCtrlKey } from "@/hooks/useCtrlKey";
 import { AppHeader } from "@/components/AppHeader";
-import { DashboardFooter } from "@/components/DashboardFooter";
+import { SiteFooterWithFeedback } from "@/components/SiteFooterWithFeedback";
 import { api } from "@/lib/api";
 
 const LOADING = (
@@ -116,7 +116,7 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
    {needsEmailVerification ? <EmailVerificationBlock /> : (
     <>
      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</div>
-     <DashboardFooter />
+     <SiteFooterWithFeedback />
     </>
    )}
   </div>
