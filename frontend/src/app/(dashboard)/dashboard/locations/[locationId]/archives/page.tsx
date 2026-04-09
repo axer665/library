@@ -1,7 +1,9 @@
 "use client";
 
 import { use, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { catalogStore } from "@/stores/catalogStore";
+import { catalogPageSearch, parseCatalogListPage, CATALOG_PAGE_QUERY_KEY } from "@/lib/catalogConstants";
 import DashboardPage from "../../../page";
 
 export default function LocationArchivesRoutePage({
@@ -11,6 +13,8 @@ export default function LocationArchivesRoutePage({
 }) {
   const resolvedParams = use(params);
   const locationId = Number(resolvedParams.locationId);
+  const searchParams = useSearchParams();
+  const listPageFromUrl = parseCatalogListPage(searchParams.get(CATALOG_PAGE_QUERY_KEY));
 
   const [routeLoading, setRouteLoading] = useState(() => {
     if (!Number.isFinite(locationId)) return true;
@@ -25,27 +29,30 @@ export default function LocationArchivesRoutePage({
 
     catalogStore.clearCatalogTransitionPending();
 
-    const key = `archives:${locationId}`;
+    const key = `archives:${locationId}:${listPageFromUrl}`;
     if (lastKeyRef.current === key) return;
     lastKeyRef.current = key;
 
-    catalogStore.setLastCatalogUrl(`/dashboard/locations/${locationId}/archives`);
+    catalogStore.setLastCatalogUrl(
+      `/dashboard/locations/${locationId}/archives${catalogPageSearch(listPageFromUrl)}`,
+    );
     const warm =
-      catalogStore.selectedLocationId === locationId && catalogStore.archives.length > 0;
+      catalogStore.selectedLocationId === locationId &&
+      catalogStore.archives.length > 0 &&
+      catalogStore.archivesPage === listPageFromUrl;
     setRouteLoading(!warm);
 
     void (async () => {
       try {
-        // F5 по URL: без списка локаций крошки не найдут название — подгружаем индекс локаций.
-        if (catalogStore.locations.length === 0) {
-          await catalogStore.loadLocations();
+        if (catalogStore.allLocationsMinimal.length === 0) {
+          await catalogStore.ensureLocationIndex();
         }
-        await catalogStore.loadArchives(locationId, { trackLoading: false, page: 1 });
+        await catalogStore.loadArchives(locationId, { trackLoading: false, page: listPageFromUrl });
       } finally {
         setRouteLoading(false);
       }
     })();
-  }, [locationId]);
+  }, [locationId, listPageFromUrl]);
 
   return <DashboardPage forceView="archives" routeLoading={routeLoading} />;
 }

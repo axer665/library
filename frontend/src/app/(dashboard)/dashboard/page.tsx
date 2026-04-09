@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { catalogPageSearch, parseCatalogListPage, CATALOG_PAGE_QUERY_KEY } from "@/lib/catalogConstants";
 import { MainContent } from "@/components/MainContent";
 import { Modal } from "@/components/Modal";
 import { catalogStore } from "@/stores/catalogStore";
@@ -17,6 +18,8 @@ function DashboardPage({
  routeLoading?: boolean;
 }) {
  const router = useRouter();
+ const searchParams = useSearchParams();
+ const locationsPageFromUrl = parseCatalogListPage(searchParams.get(CATALOG_PAGE_QUERY_KEY));
  const bookFormDomId = useId().replace(/:/g, "");
  const [modal, setModal] = useState<"location" | "archive" | "book" | "editLocation" | "editArchive" | "editBook" | null>(null);
  const [locationName, setLocationName] = useState("");
@@ -42,7 +45,6 @@ function DashboardPage({
   if (forceView) return false;
   return catalogStore.locations.length === 0;
  });
- const startedRef = useRef(false);
 
  useEffect(() => {
   // Если мы пришли на /dashboard/locations/:id/... — загрузку сделают route-обёртки.
@@ -50,18 +52,17 @@ function DashboardPage({
 
   catalogStore.clearCatalogTransitionPending();
 
-  if (!forceView) catalogStore.setLastCatalogUrl("/dashboard");
-  if (startedRef.current) return;
-  startedRef.current = true;
+  if (!forceView) {
+   catalogStore.setLastCatalogUrl(`/dashboard${catalogPageSearch(locationsPageFromUrl)}`);
+   catalogStore.backToLocations();
+  }
 
   void (async () => {
-   const needLocations = catalogStore.locations.length === 0;
-   if (needLocations) setInitialLoading(true);
-   if (!forceView) catalogStore.backToLocations();
-   if (needLocations) await catalogStore.loadLocations();
+   setInitialLoading(true);
+   await catalogStore.loadLocations(locationsPageFromUrl);
    setInitialLoading(false);
   })();
- }, [forceView]);
+ }, [forceView, locationsPageFromUrl]);
 
  const handleSelectLocation = (id: number) => {
   router.push(`/dashboard/locations/${id}/archives`);
@@ -270,15 +271,27 @@ function DashboardPage({
     : catalogStore.booksPagination;
 
  const handleListPageChange = (page: number) => {
-  if (mainView === "locations") void catalogStore.loadLocations(page);
-  else if (mainView === "archives" && catalogStore.selectedLocationId != null)
-   void catalogStore.loadArchives(catalogStore.selectedLocationId, {
-    clearBooksAndArchive: false,
-    trackLoading: false,
-    page,
+  const q = catalogPageSearch(page);
+  if (mainView === "locations") {
+   router.replace(`/dashboard${q}`, { scroll: false });
+   return;
+  }
+  if (mainView === "archives" && catalogStore.selectedLocationId != null) {
+   router.replace(`/dashboard/locations/${catalogStore.selectedLocationId}/archives${q}`, {
+    scroll: false,
    });
-  else if (mainView === "books" && catalogStore.selectedArchiveId != null)
-   void catalogStore.loadBooks(catalogStore.selectedArchiveId, { trackLoading: false, page });
+   return;
+  }
+  if (
+   mainView === "books" &&
+   catalogStore.selectedLocationId != null &&
+   catalogStore.selectedArchiveId != null
+  ) {
+   router.replace(
+    `/dashboard/locations/${catalogStore.selectedLocationId}/archives/${catalogStore.selectedArchiveId}${q}`,
+    { scroll: false },
+   );
+  }
  };
 
  return (

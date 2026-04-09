@@ -241,7 +241,7 @@ class CatalogStore {
   async selectLocationAndArchive(
     locationId: number,
     archiveId: number,
-    options?: { trackLoading?: boolean },
+    options?: { trackLoading?: boolean; booksPage?: number; archivesPage?: number },
   ) {
     const trackLoading = options?.trackLoading !== false;
     const prevLoc = this.selectedLocationId;
@@ -252,11 +252,15 @@ class CatalogStore {
       if (prevLoc !== locationId) {
         this.archives = [];
         this.books = [];
-        this.archivesPage = 1;
-        this.booksPage = 1;
+        this.archivesPage = options?.archivesPage ?? 1;
+        this.booksPage = options?.booksPage ?? 1;
       } else if (prevArch !== archiveId) {
         this.books = [];
-        this.booksPage = 1;
+        this.booksPage = options?.booksPage ?? 1;
+        if (options?.archivesPage != null) this.archivesPage = options.archivesPage;
+      } else {
+        if (options?.booksPage != null) this.booksPage = options.booksPage;
+        if (options?.archivesPage != null) this.archivesPage = options.archivesPage;
       }
     });
     await this.loadArchives(locationId, {
