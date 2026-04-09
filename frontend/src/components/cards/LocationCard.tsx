@@ -76,7 +76,7 @@ function BookSquare({ book }: { book: BookPreview }) {
      alt={book.title}
     />
    ) : (
-    <div className="location-card__book-thumb-placeholder flex h-full w-full items-center justify-center text-[10px] text-ink-light">
+    <div className="location-card__book-thumb-placeholder flex h-full w-full items-center justify-center text-[26px] text-ink-light">
      📖
     </div>
    )}
