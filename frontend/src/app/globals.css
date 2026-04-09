@@ -87,6 +87,28 @@ html.catalog-dnd-dragging .sortable-card-item--coarse-touch :where(*) {
   touch-action: none !important;
 }
 
+/* Посадочная: появление блока «бургер / Войти» после ответа me() */
+@keyframes landing-nav-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.landing-nav-reveal {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .landing-nav-reveal {
+    animation: landing-nav-reveal 0.35s ease-out forwards;
+  }
+}
+
 .input-file-accent::file-selector-button {
   margin-right: 0.5rem;
   border: 0;

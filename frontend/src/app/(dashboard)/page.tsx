@@ -39,7 +39,8 @@ const HERO_BG_ROTATION_INTERVAL_MS = 20_000;
 function HomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [navMounted, setNavMounted] = useState(false);
+  /** После ответа me() (или сразу, если нет токена) — показываем бургер или «Войти / Регистрация». */
+  const [authNavReady, setAuthNavReady] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [authMode, setAuthMode] = useState<"login" | "register" | "forgot" | null>(null);
@@ -58,10 +59,6 @@ function HomePageInner() {
   const [heroReduceMotion, setHeroReduceMotion] = useState(false);
   /** Какой фон hero активен видимым слоем (0 | 1); второй слой с противоположной opacity для кроссфейда. */
   const [heroBgActive, setHeroBgActive] = useState(0);
-
-  useEffect(() => {
-    setNavMounted(true);
-  }, []);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -89,7 +86,18 @@ function HomePageInner() {
   }, [heroReduceMotion]);
 
   useEffect(() => {
-    if (authStore.token) void authStore.syncUserFromApi();
+    let cancelled = false;
+    void (async () => {
+      if (!authStore.token) {
+        if (!cancelled) setAuthNavReady(true);
+        return;
+      }
+      await authStore.syncUserFromApi();
+      if (!cancelled) setAuthNavReady(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -208,81 +216,85 @@ function HomePageInner() {
         <header className="border-b border-theme bg-parchment">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
             <BrandLogo href="/" />
-            <nav aria-label="Навигация по сайту" className="flex items-center gap-3">
-              {!navMounted ? (
-                <div className="h-10 w-[11.5rem]" aria-hidden />
-              ) : authStore.isAuthenticated ? (
-                <div className="relative flex justify-end" ref={menuRef}>
-                  <button
-                    type="button"
-                    onClick={() => setMenuOpen((o) => !o)}
-                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-theme bg-white text-ink transition hover-border-accent hover:bg-accent-muted"
-                    aria-expanded={menuOpen}
-                    aria-haspopup="menu"
-                    aria-label="Меню аккаунта"
-                  >
-                    <MenuIcon />
-                  </button>
-                  {menuOpen && (
-                    <div
-                      role="menu"
-                      className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-xl border border-theme bg-white py-1 shadow-lg"
-                    >
-                      <Link
-                        role="menuitem"
-                        href="/dashboard/profile"
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-3 py-2.5 text-left text-sm transition hover:bg-sand"
-                      >
-                        <span className="block truncate font-medium text-ink">
-                          {authStore.user?.email ?? "Профиль"}
-                        </span>
-                        <span className="mt-0.5 block text-xs text-ink-muted">Личные данные</span>
-                      </Link>
-                      <div className="my-1 border-t border-theme" role="separator" />
-                      <Link
-                        role="menuitem"
-                        href={catalogStore.lastCatalogUrl || "/dashboard"}
-                        onClick={() => setMenuOpen(false)}
-                        className="block px-3 py-2 text-left text-sm text-ink transition hover:bg-sand"
-                      >
-                        Каталог
-                      </Link>
-                      <div className="my-1 border-t border-theme" role="separator" />
+            <nav aria-label="Навигация по сайту" className="flex min-h-10 items-center gap-3">
+              {!authNavReady ? (
+                <div className="h-10 w-[11.5rem] shrink-0" aria-hidden />
+              ) : (
+                <div className="landing-nav-reveal flex items-center gap-3">
+                  {authStore.isAuthenticated ? (
+                    <div className="relative flex justify-end" ref={menuRef}>
                       <button
                         type="button"
-                        role="menuitem"
-                        onClick={handleLogout}
-                        className="w-full px-3 py-2 text-left text-sm text-ink transition hover:bg-sand"
+                        onClick={() => setMenuOpen((o) => !o)}
+                        className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border border-theme bg-white text-ink transition hover-border-accent hover:bg-accent-muted"
+                        aria-expanded={menuOpen}
+                        aria-haspopup="menu"
+                        aria-label="Меню аккаунта"
                       >
-                        Выйти
+                        <MenuIcon />
                       </button>
+                      {menuOpen && (
+                        <div
+                          role="menu"
+                          className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-xl border border-theme bg-white py-1 shadow-lg"
+                        >
+                          <Link
+                            role="menuitem"
+                            href="/dashboard/profile"
+                            onClick={() => setMenuOpen(false)}
+                            className="block px-3 py-2.5 text-left text-sm transition hover:bg-sand"
+                          >
+                            <span className="block truncate font-medium text-ink">
+                              {authStore.user?.email ?? "Профиль"}
+                            </span>
+                            <span className="mt-0.5 block text-xs text-ink-muted">Личные данные</span>
+                          </Link>
+                          <div className="my-1 border-t border-theme" role="separator" />
+                          <Link
+                            role="menuitem"
+                            href={catalogStore.lastCatalogUrl || "/dashboard"}
+                            onClick={() => setMenuOpen(false)}
+                            className="block px-3 py-2 text-left text-sm text-ink transition hover:bg-sand"
+                          >
+                            Каталог
+                          </Link>
+                          <div className="my-1 border-t border-theme" role="separator" />
+                          <button
+                            type="button"
+                            role="menuitem"
+                            onClick={handleLogout}
+                            className="w-full px-3 py-2 text-left text-sm text-ink transition hover:bg-sand"
+                          >
+                            Выйти
+                          </button>
+                        </div>
+                      )}
                     </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover-bg-sand"
+                        onClick={() => {
+                          setError("");
+                          setAuthMode("login");
+                        }}
+                      >
+                        Войти
+                      </button>
+                      <button
+                        type="button"
+                        className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
+                        onClick={() => {
+                          setError("");
+                          setAuthMode("register");
+                        }}
+                      >
+                        Регистрация
+                      </button>
+                    </>
                   )}
                 </div>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    className="rounded-lg border border-theme px-4 py-2 text-sm font-medium text-ink transition hover-bg-sand"
-                    onClick={() => {
-                      setError("");
-                      setAuthMode("login");
-                    }}
-                  >
-                    Войти
-                  </button>
-                  <button
-                    type="button"
-                    className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white transition hover-bg-accent-hover"
-                    onClick={() => {
-                      setError("");
-                      setAuthMode("register");
-                    }}
-                  >
-                    Регистрация
-                  </button>
-                </>
               )}
             </nav>
           </div>

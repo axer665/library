@@ -102,8 +102,12 @@ function DashboardLayoutInner({ children }: { children: React.ReactNode }) {
   }
  }, [mounted, pathname, authStore.token, authStore.user]);
 
+ // Главная `/` и прочие не-/dashboard маршруты группы — без полноэкранной «Загрузка…» (контент сам решает навигацию).
+ if (!pathname.startsWith("/dashboard")) {
+  return <>{children}</>;
+ }
+
  if (!mounted) return LOADING;
- if (!pathname.startsWith("/dashboard")) return <>{children}</>;
  if (!authStore.token) return LOADING;
  // Пока нет user после F5 — ждём первый me(); фоновые sync не подменяют весь экран.
  if (authStore.token && !authStore.user) return LOADING;
