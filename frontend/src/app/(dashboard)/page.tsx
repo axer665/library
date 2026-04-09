@@ -59,6 +59,8 @@ function HomePageInner() {
   const [heroReduceMotion, setHeroReduceMotion] = useState(false);
   /** Какой фон hero активен видимым слоем (0 | 1); второй слой с противоположной opacity для кроссфейда. */
   const [heroBgActive, setHeroBgActive] = useState(0);
+  /** Оба фоновых изображения загружены — затем плавное появление блока и старт ротации. */
+  const [heroImgLoaded, setHeroImgLoaded] = useState<[boolean, boolean]>([false, false]);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -77,13 +79,24 @@ function HomePageInner() {
 
   const heroParallaxY = heroReduceMotion ? 0 : heroScrollY * 0.22;
 
+  const heroVisualsReady = heroImgLoaded[0] && heroImgLoaded[1];
+
+  const markHeroImageLoaded = (index: 0 | 1) => {
+    setHeroImgLoaded((prev) => {
+      if (prev[index]) return prev;
+      const next: [boolean, boolean] = [prev[0], prev[1]];
+      next[index] = true;
+      return next;
+    });
+  };
+
   useEffect(() => {
-    if (heroReduceMotion) return;
+    if (heroReduceMotion || !heroVisualsReady) return;
     const t = window.setInterval(() => {
       setHeroBgActive((n) => (n === 0 ? 1 : 0));
     }, HERO_BG_ROTATION_INTERVAL_MS);
     return () => window.clearInterval(t);
-  }, [heroReduceMotion]);
+  }, [heroReduceMotion, heroVisualsReady]);
 
   useEffect(() => {
     let cancelled = false;
@@ -313,63 +326,82 @@ function HomePageInner() {
               }}
               aria-hidden
             >
-              <div className="absolute inset-0">
-                <div
-                  className={
-                    heroReduceMotion
-                      ? "absolute inset-0"
-                      : "absolute inset-0 transition-opacity ease-in-out"
-                  }
-                  style={{
-                    opacity: heroBgActive === 0 ? 1 : 0,
-                    ...(!heroReduceMotion && { transitionDuration: `${HERO_BG_CROSSFADE_MS}ms` }),
-                  }}
-                >
-                  <Image
-                    src="/images/landing-hero-bookshelf.png"
-                    alt=""
-                    fill
-                    className="object-cover object-[55%_28%]"
-                    sizes="100vw"
-                    priority
-                    quality={88}
-                  />
+              <div
+                className={`absolute inset-0 origin-center ${
+                  heroReduceMotion
+                    ? heroVisualsReady
+                      ? "opacity-100"
+                      : "opacity-0"
+                    : heroVisualsReady
+                      ? "scale-100 opacity-100"
+                      : "scale-[0.97] opacity-0"
+                } ${
+                  heroReduceMotion
+                    ? "transition-opacity duration-500 ease-out"
+                    : "transition-[opacity,transform] duration-[1000ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                }`}
+              >
+                <div className="absolute inset-0">
+                  <div
+                    className={
+                      heroReduceMotion
+                        ? "absolute inset-0"
+                        : "absolute inset-0 transition-opacity ease-in-out"
+                    }
+                    style={{
+                      opacity: heroBgActive === 0 ? 1 : 0,
+                      ...(!heroReduceMotion && { transitionDuration: `${HERO_BG_CROSSFADE_MS}ms` }),
+                    }}
+                  >
+                    <Image
+                      src="/images/landing-hero-bookshelf.png"
+                      alt=""
+                      fill
+                      className="object-cover object-[55%_28%]"
+                      sizes="100vw"
+                      priority
+                      quality={88}
+                      onLoadingComplete={() => markHeroImageLoaded(0)}
+                    />
+                  </div>
+                  <div
+                    className={
+                      heroReduceMotion
+                        ? "absolute inset-0"
+                        : "absolute inset-0 transition-opacity ease-in-out"
+                    }
+                    style={{
+                      opacity: heroBgActive === 1 ? 1 : 0,
+                      ...(!heroReduceMotion && { transitionDuration: `${HERO_BG_CROSSFADE_MS}ms` }),
+                    }}
+                  >
+                    <Image
+                      src="/images/landing-hero-cat-nightstand.png"
+                      alt=""
+                      fill
+                      className="object-cover object-[50%_32%]"
+                      sizes="100vw"
+                      priority
+                      quality={88}
+                      onLoadingComplete={() => markHeroImageLoaded(1)}
+                    />
+                  </div>
                 </div>
                 <div
-                  className={
-                    heroReduceMotion
-                      ? "absolute inset-0"
-                      : "absolute inset-0 transition-opacity ease-in-out"
-                  }
+                  className="absolute inset-0"
                   style={{
-                    opacity: heroBgActive === 1 ? 1 : 0,
-                    ...(!heroReduceMotion && { transitionDuration: `${HERO_BG_CROSSFADE_MS}ms` }),
+                    background:
+                      "linear-gradient(180deg, rgba(250,248,245,0.91) 0%, rgba(245,240,232,0.8) 42%, rgba(250,248,245,0.93) 100%)",
                   }}
-                >
-                  <Image
-                    src="/images/landing-hero-cat-nightstand.png"
-                    alt=""
-                    fill
-                    className="object-cover object-[50%_32%]"
-                    sizes="100vw"
-                    quality={88}
-                  />
-                </div>
+                />
+                <div
+                  className="absolute inset-0 opacity-40 mix-blend-multiply"
+                  style={{
+                    background:
+                      "linear-gradient(135deg, rgba(232,242,239,0.55) 0%, transparent 55%, rgba(232,220,208,0.35) 100%)",
+                  }}
+                />
               </div>
-              <div
-                className="absolute inset-0"
-                style={{
-                  background:
-                    "linear-gradient(180deg, rgba(250,248,245,0.91) 0%, rgba(245,240,232,0.8) 42%, rgba(250,248,245,0.93) 100%)",
-                }}
-              />
-              <div
-                className="absolute inset-0 opacity-40 mix-blend-multiply"
-                style={{
-                  background:
-                    "linear-gradient(135deg, rgba(232,242,239,0.55) 0%, transparent 55%, rgba(232,220,208,0.35) 100%)",
-                }}
-              />
             </div>
 
             <div className="relative z-10 mx-auto w-full max-w-6xl px-6 pb-16 pt-14">
