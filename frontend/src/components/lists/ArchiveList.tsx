@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, rectSortingStrategy } from "@dnd-kit/sortable";
+import { useCatalogSortableSensors } from "@/components/sortable/useCatalogSortableSensors";
 import type { Archive } from "@/stores/catalogStore";
 import { ArchiveCard } from "@/components/cards/ArchiveCard";
 import { CardGrid } from "@/components/cards/CardGrid";
@@ -23,10 +16,7 @@ interface ArchiveListProps {
 }
 
 export function ArchiveList({ archives, onSelect, onEdit, onReorder }: ArchiveListProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const sensors = useCatalogSortableSensors();
 
   const ids = archives.map((a) => a.id);
 

@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, rectSortingStrategy } from "@dnd-kit/sortable";
+import { useCatalogSortableSensors } from "@/components/sortable/useCatalogSortableSensors";
 import type { Location } from "@/stores/catalogStore";
 import { LocationCard } from "@/components/cards/LocationCard";
 import { CardGrid } from "@/components/cards/CardGrid";
@@ -30,10 +23,7 @@ export function LocationList({
   onEdit,
   onReorder,
 }: LocationListProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const sensors = useCatalogSortableSensors();
 
   const ids = locations.map((l) => l.id);
 

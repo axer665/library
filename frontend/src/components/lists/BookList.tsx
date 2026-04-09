@@ -1,15 +1,8 @@
 "use client";
 
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from "@dnd-kit/core";
-import { SortableContext, arrayMove, rectSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { DndContext, closestCenter, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, arrayMove, rectSortingStrategy } from "@dnd-kit/sortable";
+import { useCatalogSortableSensors } from "@/components/sortable/useCatalogSortableSensors";
 import type { Book } from "@/stores/catalogStore";
 import { BookCard } from "@/components/cards/BookCard";
 import { CardGrid } from "@/components/cards/CardGrid";
@@ -22,10 +15,7 @@ interface BookListProps {
 }
 
 export function BookList({ books, onEdit, onReorder }: BookListProps) {
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
+  const sensors = useCatalogSortableSensors();
 
   const ids = books.map((b) => b.id);
 
