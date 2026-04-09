@@ -21,11 +21,12 @@ export function SortableCardItem({
     opacity: isDragging ? 0.92 : undefined,
   };
 
+  /* touch-pan-y: вертикальный скролл страницы с карточки; touch-none только во время drag. */
   return (
     <div
       ref={setNodeRef}
       style={style}
-      className={`min-w-0 touch-none ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+      className={`min-w-0 ${isDragging ? "touch-none" : "touch-pan-y"} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
       {...attributes}
       {...listeners}
     >
