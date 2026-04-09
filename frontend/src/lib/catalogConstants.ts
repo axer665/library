@@ -1,2 +1,2 @@
 /** Единый размер страницы для списков локаций / архивов / книг в каталоге */
-export const CATALOG_LIST_PER_PAGE = 24;
+export const CATALOG_LIST_PER_PAGE = 10;
