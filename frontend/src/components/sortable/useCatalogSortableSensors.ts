@@ -28,16 +28,23 @@ function acquireTouchSensorSetup() {
   };
 }
 
+/** Удержание (мс) и допуск смещения (px) для тача: вне этих пределов жест = скролл, не drag. */
+export const CATALOG_TOUCH_HOLD_MS = 380;
+export const CATALOG_TOUCH_HOLD_TOLERANCE_PX = 12;
+
 /**
- * Сенсоры сортировки (ручка на карточке): мышь — PointerSensor, тач — TouchSensor.
- * TouchSensor.setup() нужен для iOS Safari (непассивный touchmove), см. @dnd-kit/core.
+ * Тач: удержание ~CATALOG_TOUCH_HOLD_MS без сдвига > tolerance — затем можно вести (сортировка).
+ * Мышь: смещение от 10px. TouchSensor.setup() — для iOS Safari.
  */
 export function useCatalogSortableSensors() {
   useEffect(() => acquireTouchSensorSetup(), []);
 
   return useSensors(
     useSensor(TouchSensor, {
-      activationConstraint: { distance: 8 },
+      activationConstraint: {
+        delay: CATALOG_TOUCH_HOLD_MS,
+        tolerance: CATALOG_TOUCH_HOLD_TOLERANCE_PX,
+      },
     }),
     useSensor(PointerSensor, {
       activationConstraint: { distance: 10 },
