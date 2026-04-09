@@ -32,6 +32,10 @@ function MenuIcon() {
   );
 }
 
+/** Секция `landing__section--hero`: два фона, плавная смена по opacity. */
+const HERO_BG_CROSSFADE_MS = 2000;
+const HERO_BG_ROTATION_INTERVAL_MS = 20_000;
+
 function HomePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -80,7 +84,7 @@ function HomePageInner() {
     if (heroReduceMotion) return;
     const t = window.setInterval(() => {
       setHeroBgActive((n) => (n === 0 ? 1 : 0));
-    }, 20_000);
+    }, HERO_BG_ROTATION_INTERVAL_MS);
     return () => window.clearInterval(t);
   }, [heroReduceMotion]);
 
@@ -302,9 +306,12 @@ function HomePageInner() {
                   className={
                     heroReduceMotion
                       ? "absolute inset-0"
-                      : "absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
+                      : "absolute inset-0 transition-opacity ease-in-out"
                   }
-                  style={{ opacity: heroBgActive === 0 ? 1 : 0 }}
+                  style={{
+                    opacity: heroBgActive === 0 ? 1 : 0,
+                    ...(!heroReduceMotion && { transitionDuration: `${HERO_BG_CROSSFADE_MS}ms` }),
+                  }}
                 >
                   <Image
                     src="/images/landing-hero-bookshelf.png"
@@ -320,9 +327,12 @@ function HomePageInner() {
                   className={
                     heroReduceMotion
                       ? "absolute inset-0"
-                      : "absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
+                      : "absolute inset-0 transition-opacity ease-in-out"
                   }
-                  style={{ opacity: heroBgActive === 1 ? 1 : 0 }}
+                  style={{
+                    opacity: heroBgActive === 1 ? 1 : 0,
+                    ...(!heroReduceMotion && { transitionDuration: `${HERO_BG_CROSSFADE_MS}ms` }),
+                  }}
                 >
                   <Image
                     src="/images/landing-hero-cat-nightstand.png"
