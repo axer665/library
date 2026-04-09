@@ -1,14 +1,44 @@
 "use client";
 
-import { KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { useEffect } from "react";
+import {
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
+let touchSetupRefCount = 0;
+let touchSetupTeardown: (() => void) | undefined;
+
+function acquireTouchSensorSetup() {
+  if (touchSetupRefCount === 0) {
+    touchSetupTeardown = TouchSensor.setup();
+  }
+  touchSetupRefCount += 1;
+  return () => {
+    touchSetupRefCount -= 1;
+    if (touchSetupRefCount <= 0) {
+      touchSetupTeardown?.();
+      touchSetupTeardown = undefined;
+      touchSetupRefCount = 0;
+    }
+  };
+}
+
 /**
- * Сенсоры для сортировки: перетаскивание только с ручки (`SortableCardItem`),
- * поэтому достаточно порога по расстоянию — скролл по карточке не перехватывается.
+ * Сенсоры сортировки (ручка на карточке): мышь — PointerSensor, тач — TouchSensor.
+ * TouchSensor.setup() нужен для iOS Safari (непассивный touchmove), см. @dnd-kit/core.
  */
 export function useCatalogSortableSensors() {
+  useEffect(() => acquireTouchSensorSetup(), []);
+
   return useSensors(
+    useSensor(TouchSensor, {
+      activationConstraint: { distance: 8 },
+    }),
     useSensor(PointerSensor, {
       activationConstraint: { distance: 10 },
     }),

@@ -52,7 +52,7 @@ export function SortableCardItem({
     >
       <button
         type="button"
-        className={`sortable-card-item__handle absolute left-2 top-2 z-30 flex h-10 w-10 cursor-grab items-center justify-center rounded-lg border border-theme/80 bg-white/95 text-ink-light shadow-sm backdrop-blur-sm transition hover:border-accent/50 hover:bg-white hover:text-accent active:cursor-grabbing ${isDragging ? "cursor-grabbing" : ""}`}
+        className={`sortable-card-item__handle touch-none absolute left-2 top-2 z-30 flex min-h-11 min-w-11 cursor-grab items-center justify-center rounded-lg border border-theme/80 bg-white/95 text-ink-light shadow-sm backdrop-blur-sm transition hover:border-accent/50 hover:bg-white hover:text-accent active:cursor-grabbing ${isDragging ? "cursor-grabbing" : ""}`}
         title="Перетащить для сортировки"
         aria-label="Перетащить для изменения порядка"
         {...attributes}
