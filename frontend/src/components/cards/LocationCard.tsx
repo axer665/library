@@ -64,7 +64,7 @@ function EditButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
 function BookSquare({ book }: { book: BookPreview }) {
  return (
   <div
-   className="location-card__book-thumb h-12 w-12 shrink-0 overflow-hidden rounded bg-sand transition hover:ring-2 hover-ring-accent hover:ring-offset-1"
+   className="location-card__book-thumb h-12 w-12 shrink-0 overflow-hidden rounded bg-white transition hover:ring-2 hover-ring-accent hover:ring-offset-1"
    title={book.title}
    onPointerDown={(e) => e.stopPropagation()}
    onClick={(e) => e.stopPropagation()}

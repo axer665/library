@@ -376,8 +376,7 @@ function HomePageInner() {
             <div className="mt-6 grid gap-6 md:grid-cols-3">
               <article className="landing__article landing__article--persona rounded-xl border border-theme bg-white p-5">
                 <h3 className="font-serif text-xl font-semibold">
-                  <button
-                    type="button"
+                  <span
                     className="-mx-1 w-[calc(100%+0.5rem)] cursor-pointer rounded px-1 text-left font-[inherit] font-semibold text-inherit transition hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35"
                     onClick={() => {
                       const w = window as Window & {
@@ -387,7 +386,7 @@ function HomePageInner() {
                     }}
                   >
                     Школьные библиотеки
-                  </button>
+                  </span>
                 </h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   Контролируйте фонд по кабинетам и быстро готовьте списки для учебного процесса.
@@ -395,8 +394,7 @@ function HomePageInner() {
               </article>
               <article className="landing__article landing__article--persona rounded-xl border border-theme bg-white p-5">
                 <h3 className="font-serif text-xl font-semibold">
-                <button
-                    type="button"
+                <span
                     className="-mx-1 w-[calc(100%+0.5rem)] cursor-pointer rounded px-1 text-left font-[inherit] font-semibold text-inherit transition hover:text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/35"
                     onClick={() => {
                       const w = window as Window & {
@@ -405,7 +403,7 @@ function HomePageInner() {
                       w.myLittleFairyWidget?.show("click");
                     }}
                   >Частные коллекции
-                  </button>
+                  </span>
                   </h3>
                 <p className="mt-2 text-sm text-ink-muted">
                   Держите личную библиотеку в порядке и легко находите редкие или забытые издания.
