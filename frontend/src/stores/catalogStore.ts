@@ -2,6 +2,7 @@
 
 import { makeAutoObservable, runInAction } from 'mobx';
 import { api } from '@/lib/api';
+import { CATALOG_LIST_PER_PAGE } from '@/lib/catalogConstants';
 
 export interface BookPreview {
   id: number;
@@ -65,12 +66,22 @@ export interface SearchPagination {
 
 class CatalogStore {
   locations: Location[] = [];
+  /** Все локации { id, name } — для поиска, крошек и модалок без загрузки сотен карточек. */
+  allLocationsMinimal: Array<{ id: number; name: string }> = [];
+  /** Названия архивов (в т.ч. вне текущей страницы списка) — для крошек и форм. */
+  archiveNameById: Record<number, string> = {};
   archives: Archive[] = [];
   books: Book[] = [];
   searchResults: Book[] = [];
   searchFilters: SearchFilters = {};
   searchPagination: SearchPagination | null = null;
   filterArchives: Archive[] = [];
+  locationsPage = 1;
+  locationsPagination: SearchPagination | null = null;
+  archivesPage = 1;
+  archivesPagination: SearchPagination | null = null;
+  booksPage = 1;
+  booksPagination: SearchPagination | null = null;
   selectedLocationId: number | null = null;
   selectedArchiveId: number | null = null;
   loading = false;
@@ -83,18 +94,55 @@ class CatalogStore {
     makeAutoObservable(this);
   }
 
-  async loadLocations() {
+  get locationsForSearch(): Location[] {
+    return this.allLocationsMinimal.map((r) => ({ id: r.id, name: r.name }));
+  }
+
+  locationName(id: number): string | undefined {
+    return this.allLocationsMinimal.find((l) => l.id === id)?.name ?? this.locations.find((l) => l.id === id)?.name;
+  }
+
+  archiveName(id: number): string | undefined {
+    return this.archives.find((a) => a.id === id)?.name ?? this.archiveNameById[id];
+  }
+
+  async ensureLocationIndex() {
+    if (this.allLocationsMinimal.length > 0) return;
+    await this.refreshLocationIndex();
+  }
+
+  async refreshLocationIndex() {
+    const rows = await api.locations.listCompact();
+    runInAction(() => {
+      this.allLocationsMinimal = rows;
+    });
+  }
+
+  async loadLocations(page?: number, options?: { refreshIndex?: boolean }) {
+    const p = page ?? this.locationsPage;
     runInAction(() => {
       this.loading = true;
+      this.locationsPage = p;
     });
     try {
-      const list = await api.locations.list();
+      if (options?.refreshIndex !== false) await this.ensureLocationIndex();
+      const res = await api.locations.list(p, CATALOG_LIST_PER_PAGE);
       runInAction(() => {
-        this.locations = list;
-        if (this.selectedLocationId && !list.find((l) => l.id === this.selectedLocationId))
-          this.selectedLocationId = null;
+        this.locations = res.data;
+        this.locationsPagination = res.meta;
+        this.locationsPage = res.meta.current_page;
+        if (this.selectedLocationId && !res.data.find((l) => l.id === this.selectedLocationId)) {
+          // Выбранная локация может быть на другой странице списка карточек.
+          if (!this.allLocationsMinimal.some((l) => l.id === this.selectedLocationId)) {
+            this.selectedLocationId = null;
+          }
+        }
       });
-      if (this.selectedLocationId) await this.loadArchives(this.selectedLocationId);
+      if (this.selectedLocationId)
+        await this.loadArchives(this.selectedLocationId, {
+          clearBooksAndArchive: false,
+          trackLoading: false,
+        });
     } finally {
       runInAction(() => (this.loading = false));
     }
@@ -102,12 +150,18 @@ class CatalogStore {
 
   async loadArchives(
     locationId: number,
-    options?: { clearBooksAndArchive?: boolean; trackLoading?: boolean },
+    options?: {
+      clearBooksAndArchive?: boolean;
+      trackLoading?: boolean;
+      page?: number;
+    },
   ) {
     const clearBooksAndArchive = options?.clearBooksAndArchive !== false;
     const trackLoading = options?.trackLoading !== false;
+    const page = options?.page ?? this.archivesPage;
     runInAction(() => {
       this.selectedLocationId = locationId;
+      this.archivesPage = page;
       if (clearBooksAndArchive) {
         this.selectedArchiveId = null;
         this.books = [];
@@ -115,11 +169,14 @@ class CatalogStore {
       if (trackLoading) this.loading = true;
     });
     try {
-      const list = await api.archives.list(locationId);
+      const res = await api.archives.list(locationId, page, CATALOG_LIST_PER_PAGE);
       runInAction(() => {
-        this.archives = list;
-        if (this.selectedArchiveId && !list.find((a) => a.id === this.selectedArchiveId))
-          this.selectedArchiveId = null;
+        this.archives = res.data;
+        this.archivesPagination = res.meta;
+        this.archivesPage = res.meta.current_page;
+        for (const a of res.data) {
+          this.archiveNameById[a.id] = a.name;
+        }
       });
     } finally {
       if (trackLoading) runInAction(() => (this.loading = false));
@@ -131,6 +188,10 @@ class CatalogStore {
     this.selectedArchiveId = null;
     this.archives = [];
     this.books = [];
+    this.archivesPagination = null;
+    this.booksPagination = null;
+    this.archivesPage = 1;
+    this.booksPage = 1;
   }
 
   setLastCatalogUrl(url: string) {
@@ -151,6 +212,10 @@ class CatalogStore {
       this.selectedArchiveId = null;
       this.archives = [];
       this.books = [];
+      this.archivesPagination = null;
+      this.booksPagination = null;
+      this.archivesPage = 1;
+      this.booksPage = 1;
     });
   }
 
@@ -160,12 +225,16 @@ class CatalogStore {
       this.catalogTransitionPending = true;
       this.selectedArchiveId = null;
       this.books = [];
+      this.booksPagination = null;
+      this.booksPage = 1;
     });
   }
 
   backToArchives() {
     this.selectedArchiveId = null;
     this.books = [];
+    this.booksPagination = null;
+    this.booksPage = 1;
     if (this.selectedLocationId) this.loadArchives(this.selectedLocationId);
   }
 
@@ -183,23 +252,44 @@ class CatalogStore {
       if (prevLoc !== locationId) {
         this.archives = [];
         this.books = [];
+        this.archivesPage = 1;
+        this.booksPage = 1;
       } else if (prevArch !== archiveId) {
         this.books = [];
+        this.booksPage = 1;
       }
     });
-    await this.loadArchives(locationId, { clearBooksAndArchive: false, trackLoading });
-    await this.loadBooks(archiveId, { trackLoading });
+    await this.loadArchives(locationId, {
+      clearBooksAndArchive: false,
+      trackLoading,
+      page: this.archivesPage,
+    });
+    if (!this.archiveName(archiveId)) {
+      const rows = await api.archives.listCompact(locationId);
+      runInAction(() => {
+        for (const r of rows) {
+          this.archiveNameById[r.id] = r.name;
+        }
+      });
+    }
+    await this.loadBooks(archiveId, { trackLoading, page: this.booksPage });
   }
 
-  async loadBooks(archiveId: number, options?: { trackLoading?: boolean }) {
+  async loadBooks(archiveId: number, options?: { trackLoading?: boolean; page?: number }) {
     const trackLoading = options?.trackLoading !== false;
+    const page = options?.page ?? this.booksPage;
     runInAction(() => {
       this.selectedArchiveId = archiveId;
+      this.booksPage = page;
       if (trackLoading) this.loading = true;
     });
     try {
-      const list = await api.books.list(archiveId);
-      runInAction(() => (this.books = list));
+      const res = await api.books.list(archiveId, page, CATALOG_LIST_PER_PAGE);
+      runInAction(() => {
+        this.books = res.data;
+        this.booksPagination = res.meta;
+        this.booksPage = res.meta.current_page;
+      });
     } finally {
       if (trackLoading) runInAction(() => (this.loading = false));
     }
@@ -210,18 +300,23 @@ class CatalogStore {
     this.selectedArchiveId = null;
     this.archives = [];
     this.books = [];
-    if (id) this.loadArchives(id);
+    this.archivesPagination = null;
+    this.booksPagination = null;
+    this.archivesPage = 1;
+    this.booksPage = 1;
+    if (id) this.loadArchives(id, { page: 1 });
   }
 
   async createLocation(name: string) {
-    const loc = await api.locations.create(name);
-    runInAction(() => this.locations.push(loc));
+    await api.locations.create(name);
+    await this.refreshLocationIndex();
+    await this.loadLocations(this.locationsPage, { refreshIndex: false });
   }
 
   async createArchive(locationId: number, name: string) {
     const arch = await api.archives.create(locationId, name);
     runInAction(() => {
-      this.archives.push(arch);
+      this.archiveNameById[arch.id] = arch.name;
       const li = this.locations.findIndex((l) => l.id === locationId);
       if (li >= 0) {
         const loc = this.locations[li];
@@ -232,12 +327,17 @@ class CatalogStore {
         this.locations[li] = { ...loc, archives_count: nextCount, archives: merged };
       }
     });
+    await this.loadArchives(locationId, {
+      clearBooksAndArchive: false,
+      trackLoading: false,
+      page: this.archivesPage,
+    });
+    return arch;
   }
 
   async createBook(archiveId: number, data: { author: string; title: string; publisher: string; annotation?: string; year?: number }) {
     const book = await api.books.create(archiveId, data);
     runInAction(() => {
-      this.books.push(book);
       const ai = this.archives.findIndex((a) => a.id === archiveId);
       if (ai >= 0) {
         const a = this.archives[ai];
@@ -264,6 +364,7 @@ class CatalogStore {
         }
       }
     });
+    await this.loadBooks(archiveId, { trackLoading: false, page: this.booksPage });
     return book;
   }
 
@@ -278,6 +379,8 @@ class CatalogStore {
   async updateLocation(id: number, name: string) {
     await api.locations.update(id, name);
     runInAction(() => {
+      const mi = this.allLocationsMinimal.findIndex((l) => l.id === id);
+      if (mi >= 0) this.allLocationsMinimal[mi] = { ...this.allLocationsMinimal[mi], name };
       const i = this.locations.findIndex((l) => l.id === id);
       if (i >= 0) this.locations[i] = { ...this.locations[i], name };
     });
@@ -360,9 +463,11 @@ class CatalogStore {
           this.selectedArchiveId = null;
           this.books = [];
         }
+        this.archiveNameById[id] = nameFinal;
       } else if (data.name !== undefined) {
         const ai = this.archives.findIndex((a) => a.id === id);
         if (ai >= 0) this.archives[ai] = { ...this.archives[ai], name: data.name };
+        this.archiveNameById[id] = data.name;
 
         if (oldLocId != null) {
           const li = this.locations.findIndex((l) => l.id === oldLocId);
@@ -381,6 +486,7 @@ class CatalogStore {
       await this.loadArchives(oldLocId, {
         clearBooksAndArchive: false,
         trackLoading: false,
+        page: this.archivesPage,
       });
     }
   }
@@ -453,27 +559,44 @@ class CatalogStore {
     });
 
     if (this.selectedArchiveId != null) {
-      await this.loadBooks(this.selectedArchiveId, { trackLoading: false });
+      await this.loadBooks(this.selectedArchiveId, {
+        trackLoading: false,
+        page: this.booksPage,
+      });
     }
   }
 
   async deleteLocation(id: number) {
     await api.locations.delete(id);
+    await this.refreshLocationIndex();
+    const wasOnly = this.locations.length === 1;
+    const pageBefore = this.locationsPage;
+    let nextPage = pageBefore;
+    if (wasOnly && pageBefore > 1) nextPage = pageBefore - 1;
+    const wasSel = this.selectedLocationId === id;
     runInAction(() => {
-      this.locations = this.locations.filter((l) => l.id !== id);
-      if (this.selectedLocationId === id) {
-        this.selectedLocationId = this.locations[0]?.id ?? null;
+      if (wasSel) {
+        this.selectedLocationId = null;
+        this.selectedArchiveId = null;
         this.archives = [];
         this.books = [];
+        this.archivesPagination = null;
+        this.booksPagination = null;
+        this.archivesPage = 1;
+        this.booksPage = 1;
       }
     });
+    await this.loadLocations(nextPage, { refreshIndex: false });
   }
 
   async deleteArchive(id: number) {
     await api.archives.delete(id);
+    const locId = this.selectedLocationId;
+    const wasOnly = this.archives.length === 1;
+    let nextPage = this.archivesPage;
+    if (wasOnly && nextPage > 1) nextPage -= 1;
+    const clearBooks = this.selectedArchiveId === id;
     runInAction(() => {
-      this.archives = this.archives.filter((a) => a.id !== id);
-      const locId = this.selectedLocationId;
       if (locId != null) {
         const li = this.locations.findIndex((l) => l.id === locId);
         if (li >= 0) {
@@ -483,18 +606,29 @@ class CatalogStore {
           this.locations[li] = { ...loc, archives: filtered, archives_count: nextCount };
         }
       }
-      if (this.selectedArchiveId === id) {
-        this.selectedArchiveId = this.archives[0]?.id ?? null;
+      if (clearBooks) {
+        this.selectedArchiveId = null;
         this.books = [];
+        this.booksPagination = null;
+        this.booksPage = 1;
       }
+      delete this.archiveNameById[id];
     });
+    if (locId)
+      await this.loadArchives(locId, {
+        clearBooksAndArchive: false,
+        trackLoading: false,
+        page: nextPage,
+      });
   }
 
   async deleteBook(id: number) {
     await api.books.delete(id);
+    const archId = this.selectedArchiveId;
+    const wasOnly = this.books.length === 1;
+    let nextPage = this.booksPage;
+    if (wasOnly && nextPage > 1) nextPage -= 1;
     runInAction(() => {
-      this.books = this.books.filter((b) => b.id !== id);
-      const archId = this.selectedArchiveId;
       if (archId != null) {
         const ai = this.archives.findIndex((a) => a.id === archId);
         if (ai >= 0) {
@@ -518,6 +652,8 @@ class CatalogStore {
         }
       }
     });
+    if (archId != null)
+      await this.loadBooks(archId, { trackLoading: false, page: nextPage });
   }
 
   async reorderLocations(orderedIds: number[]) {
@@ -528,8 +664,14 @@ class CatalogStore {
         .map((id) => map.get(id))
         .filter((x): x is Location => x != null);
     });
+    const pag = this.locationsPagination;
+    const usePage = pag != null && pag.last_page > 1;
     try {
-      await api.locations.reorder(orderedIds);
+      await api.locations.reorder(
+        orderedIds,
+        usePage ? { page: this.locationsPage, per_page: pag.per_page } : undefined,
+      );
+      await this.loadLocations(this.locationsPage, { refreshIndex: false });
     } catch {
       runInAction(() => {
         this.locations = prev;
@@ -547,8 +689,19 @@ class CatalogStore {
         .map((id) => map.get(id))
         .filter((x): x is Archive => x != null);
     });
+    const pag = this.archivesPagination;
+    const usePage = pag != null && pag.last_page > 1;
     try {
-      await api.archives.reorder(locId, orderedIds);
+      await api.archives.reorder(
+        locId,
+        orderedIds,
+        usePage ? { page: this.archivesPage, per_page: pag.per_page } : undefined,
+      );
+      await this.loadArchives(locId, {
+        clearBooksAndArchive: false,
+        trackLoading: false,
+        page: this.archivesPage,
+      });
     } catch {
       runInAction(() => {
         this.archives = prev;
@@ -566,8 +719,15 @@ class CatalogStore {
         .map((id) => map.get(id))
         .filter((x): x is Book => x != null);
     });
+    const pag = this.booksPagination;
+    const usePage = pag != null && pag.last_page > 1;
     try {
-      await api.books.reorder(archId, orderedIds);
+      await api.books.reorder(
+        archId,
+        orderedIds,
+        usePage ? { page: this.booksPage, per_page: pag.per_page } : undefined,
+      );
+      await this.loadBooks(archId, { trackLoading: false, page: this.booksPage });
     } catch {
       runInAction(() => {
         this.books = prev;
@@ -580,8 +740,13 @@ class CatalogStore {
     if (filters.location_id !== undefined) {
       if (filters.location_id) {
         next.archive_id = undefined;
-        api.archives.list(filters.location_id).then((list) =>
-          runInAction(() => (this.filterArchives = list))
+        api.archives.listCompact(filters.location_id).then((list) =>
+          runInAction(() => {
+            this.filterArchives = list;
+            for (const a of list) {
+              this.archiveNameById[a.id] = a.name;
+            }
+          })
         );
       } else {
         next.archive_id = undefined;

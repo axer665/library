@@ -25,9 +25,7 @@ function SearchPage() {
  const [bookEditArchivesList, setBookEditArchivesList] = useState<Archive[]>([]);
 
  useEffect(() => {
-  if (catalogStore.locations.length === 0) {
-   void catalogStore.loadLocations();
-  }
+  void catalogStore.ensureLocationIndex();
  }, []);
 
  const handleEditBook = (book: Book) => {
@@ -44,7 +42,7 @@ function SearchPage() {
   const fromLoc =
    book.archive?.location_id ??
    book.archive?.location?.id ??
-   catalogStore.locations[0]?.id ??
+   catalogStore.allLocationsMinimal[0]?.id ??
    null;
   setBookEditLocationId(fromLoc);
   setBookEditArchiveId(fromArch);
@@ -58,7 +56,7 @@ function SearchPage() {
    return;
   }
   let cancelled = false;
-  void api.archives.list(bookEditLocationId).then((list) => {
+  void api.archives.listCompact(bookEditLocationId).then((list) => {
    if (!cancelled) setBookEditArchivesList(list);
   });
   return () => {
@@ -186,7 +184,10 @@ function SearchPage() {
         <option value="" disabled>
          Выберите локацию
         </option>
-        {catalogStore.locations.map((loc) => (
+        {(catalogStore.allLocationsMinimal.length
+         ? catalogStore.allLocationsMinimal
+         : catalogStore.locations
+        ).map((loc) => (
          <option key={loc.id} value={loc.id}>
           {loc.name}
          </option>

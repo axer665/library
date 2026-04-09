@@ -1,4 +1,13 @@
+import { CATALOG_LIST_PER_PAGE } from '@/lib/catalogConstants';
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+
+export type CatalogPaginationMeta = {
+  current_page: number;
+  last_page: number;
+  per_page: number;
+  total: number;
+};
 
 function getToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -194,16 +203,26 @@ export const api = {
       }),
   },
   locations: {
-    list: () => request<Array<{
-      id: number;
-      name: string;
-      archives_count?: number;
-      archives?: Array<{
-        id: number;
-        name: string;
-        books?: Array<{ id: number; title: string; photo_path?: string }>;
-      }>;
-    }>>('/locations'),
+    listCompact: () => request<Array<{ id: number; name: string }>>('/locations?compact=1'),
+    list: (page = 1, perPage = CATALOG_LIST_PER_PAGE) => {
+      const qs = new URLSearchParams({
+        page: String(page),
+        per_page: String(perPage),
+      });
+      return request<{
+        data: Array<{
+          id: number;
+          name: string;
+          archives_count?: number;
+          archives?: Array<{
+            id: number;
+            name: string;
+            books?: Array<{ id: number; title: string; photo_path?: string }>;
+          }>;
+        }>;
+        meta: CatalogPaginationMeta;
+      }>(`/locations?${qs}`);
+    },
     create: (name: string) => request<{ id: number; name: string }>('/locations', {
       method: 'POST',
       body: JSON.stringify({ name }),
@@ -214,15 +233,30 @@ export const api = {
       body: JSON.stringify({ name }),
     }),
     delete: (id: number) => request(`/locations/${id}`, { method: 'DELETE' }),
-    reorder: (ids: number[]) =>
+    reorder: (ids: number[], opts?: { page?: number; per_page?: number }) =>
       request<{ ok: boolean }>('/locations/reorder', {
         method: 'PUT',
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({
+          ids,
+          ...(opts?.page != null
+            ? { page: opts.page, per_page: opts.per_page ?? CATALOG_LIST_PER_PAGE }
+            : {}),
+        }),
       }),
   },
   archives: {
-    list: (locationId: number) =>
-      request<Array<{ id: number; name: string; books_count?: number }>>(`/locations/${locationId}/archives`),
+    listCompact: (locationId: number) =>
+      request<Array<{ id: number; name: string }>>(`/locations/${locationId}/archives?compact=1`),
+    list: (locationId: number, page = 1, perPage = CATALOG_LIST_PER_PAGE) => {
+      const qs = new URLSearchParams({
+        page: String(page),
+        per_page: String(perPage),
+      });
+      return request<{
+        data: Array<{ id: number; name: string; books_count?: number }>;
+        meta: CatalogPaginationMeta;
+      }>(`/locations/${locationId}/archives?${qs}`);
+    },
     create: (locationId: number, name: string) =>
       request<{ id: number; name: string }>(`/locations/${locationId}/archives`, {
         method: 'POST',
@@ -234,23 +268,36 @@ export const api = {
         body: JSON.stringify(data),
       }),
     delete: (id: number) => request(`/archives/${id}`, { method: 'DELETE' }),
-    reorder: (locationId: number, ids: number[]) =>
+    reorder: (locationId: number, ids: number[], opts?: { page?: number; per_page?: number }) =>
       request<{ ok: boolean }>(`/locations/${locationId}/archives/reorder`, {
         method: 'PUT',
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({
+          ids,
+          ...(opts?.page != null
+            ? { page: opts.page, per_page: opts.per_page ?? CATALOG_LIST_PER_PAGE }
+            : {}),
+        }),
       }),
   },
   books: {
-    list: (archiveId: number) =>
-      request<Array<{
-        id: number;
-        author: string;
-        title: string;
-        publisher: string;
-        annotation?: string;
-        year?: number;
-        photo_path?: string;
-      }>>(`/archives/${archiveId}/books`),
+    list: (archiveId: number, page = 1, perPage = CATALOG_LIST_PER_PAGE) => {
+      const qs = new URLSearchParams({
+        page: String(page),
+        per_page: String(perPage),
+      });
+      return request<{
+        data: Array<{
+          id: number;
+          author: string;
+          title: string;
+          publisher: string;
+          annotation?: string;
+          year?: number;
+          photo_path?: string;
+        }>;
+        meta: CatalogPaginationMeta;
+      }>(`/archives/${archiveId}/books?${qs}`);
+    },
     create: (archiveId: number, data: {
       author: string;
       title: string;
@@ -270,10 +317,15 @@ export const api = {
     update: (id: number, data: Record<string, unknown>) =>
       request(`/books/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: number) => request(`/books/${id}`, { method: 'DELETE' }),
-    reorder: (archiveId: number, ids: number[]) =>
+    reorder: (archiveId: number, ids: number[], opts?: { page?: number; per_page?: number }) =>
       request<{ ok: boolean }>(`/archives/${archiveId}/books/reorder`, {
         method: 'PUT',
-        body: JSON.stringify({ ids }),
+        body: JSON.stringify({
+          ids,
+          ...(opts?.page != null
+            ? { page: opts.page, per_page: opts.per_page ?? CATALOG_LIST_PER_PAGE }
+            : {}),
+        }),
       }),
     uploadPhoto: (id: number, file: File) => {
       const formData = new FormData();

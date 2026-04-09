@@ -133,7 +133,7 @@ function DashboardPage({
    return;
   }
   let cancelled = false;
-  void api.archives.list(bookEditLocationId).then((list) => {
+  void api.archives.listCompact(bookEditLocationId).then((list) => {
    if (!cancelled) setBookEditArchivesList(list);
   });
   return () => {
@@ -246,11 +246,11 @@ function DashboardPage({
  };
 
  const selectedLocationName = catalogStore.selectedLocationId
-  ? catalogStore.locations.find((l) => l.id === catalogStore.selectedLocationId)?.name
+  ? catalogStore.locationName(catalogStore.selectedLocationId)
   : undefined;
 
  const selectedArchiveName = catalogStore.selectedArchiveId
-  ? catalogStore.archives.find((a) => a.id === catalogStore.selectedArchiveId)?.name
+  ? catalogStore.archiveName(catalogStore.selectedArchiveId)
   : undefined;
 
  const isRouteLoading = routeLoading ?? false;
@@ -261,6 +261,25 @@ function DashboardPage({
    ? "archives"
    : "books";
  const mainView = forceView ?? derivedView;
+
+ const listPagination =
+  mainView === "locations"
+   ? catalogStore.locationsPagination
+   : mainView === "archives"
+    ? catalogStore.archivesPagination
+    : catalogStore.booksPagination;
+
+ const handleListPageChange = (page: number) => {
+  if (mainView === "locations") void catalogStore.loadLocations(page);
+  else if (mainView === "archives" && catalogStore.selectedLocationId != null)
+   void catalogStore.loadArchives(catalogStore.selectedLocationId, {
+    clearBooksAndArchive: false,
+    trackLoading: false,
+    page,
+   });
+  else if (mainView === "books" && catalogStore.selectedArchiveId != null)
+   void catalogStore.loadBooks(catalogStore.selectedArchiveId, { trackLoading: false, page });
+ };
 
  return (
   <>
@@ -302,6 +321,8 @@ function DashboardPage({
     onReorderLocations={(ids) => void catalogStore.reorderLocations(ids)}
     onReorderArchives={(ids) => void catalogStore.reorderArchives(ids)}
     onReorderBooks={(ids) => void catalogStore.reorderBooks(ids)}
+    listPagination={listPagination}
+    onListPageChange={handleListPageChange}
    />
 
    {(modal === "location" || modal === "editLocation") && (
@@ -392,7 +413,10 @@ function DashboardPage({
          }
          className="w-full rounded-lg border border-theme px-3 py-2 text-sm text-ink"
         >
-         {catalogStore.locations.map((loc) => (
+         {(catalogStore.allLocationsMinimal.length
+          ? catalogStore.allLocationsMinimal
+          : catalogStore.locations
+         ).map((loc) => (
           <option key={loc.id} value={loc.id}>
            {loc.name}
           </option>
@@ -484,7 +508,10 @@ function DashboardPage({
           <option value="" disabled>
            Выберите локацию
           </option>
-          {catalogStore.locations.map((loc) => (
+          {(catalogStore.allLocationsMinimal.length
+           ? catalogStore.allLocationsMinimal
+           : catalogStore.locations
+          ).map((loc) => (
            <option key={loc.id} value={loc.id}>
             {loc.name}
            </option>

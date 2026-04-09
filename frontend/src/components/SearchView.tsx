@@ -17,7 +17,7 @@ export const SearchView = observer(function SearchView({ onEditBook }: SearchVie
   searchResults,
   searchPagination,
   searchLoading,
-  locations,
+  locationsForSearch,
   filterArchives,
  } = catalogStore;
 
@@ -29,7 +29,7 @@ export const SearchView = observer(function SearchView({ onEditBook }: SearchVie
   <div className="flex flex-1 overflow-hidden bg-cream">
    <SearchSidebar
     filters={searchFilters}
-    locations={locations}
+    locations={locationsForSearch}
     archives={filterArchives}
     onFiltersChange={(f) => catalogStore.setSearchFilters(f)}
     onSearch={handleSearch}

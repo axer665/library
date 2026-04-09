@@ -1,6 +1,6 @@
 "use client";
 
-import type { Location, Archive, Book } from "@/stores/catalogStore";
+import type { Location, Archive, Book, SearchPagination } from "@/stores/catalogStore";
 import { LocationList } from "@/components/lists/LocationList";
 import { ArchiveList } from "@/components/lists/ArchiveList";
 import { BookList } from "@/components/lists/BookList";
@@ -29,6 +29,8 @@ interface MainContentProps {
  onReorderLocations?: (orderedIds: number[]) => void;
  onReorderArchives?: (orderedIds: number[]) => void;
  onReorderBooks?: (orderedIds: number[]) => void;
+ listPagination?: SearchPagination | null;
+ onListPageChange?: (page: number) => void;
 }
 
 export function MainContent({
@@ -53,6 +55,8 @@ export function MainContent({
  onReorderLocations,
  onReorderArchives,
  onReorderBooks,
+ listPagination = null,
+ onListPageChange,
 }: MainContentProps) {
  // Скелетон только если нет данных для текущего вида — иначе при client-навигации мерцает весь экран.
  const hasMeaningfulList =
@@ -186,7 +190,33 @@ export function MainContent({
     </button>
    </div>
   ) : (
-   list
+   <>
+    {list}
+    {listPagination && listPagination.last_page > 1 && onListPageChange && (
+     <div className="flex flex-shrink-0 items-center justify-center gap-2 border-t border-theme bg-parchment px-6 py-3">
+      <button
+       type="button"
+       onClick={() => onListPageChange(listPagination.current_page - 1)}
+       disabled={listPagination.current_page <= 1}
+       className="rounded-lg border border-theme px-3 py-1.5 text-sm text-ink transition hover:bg-sand disabled:opacity-50"
+      >
+       ← Назад
+      </button>
+      <span className="text-sm text-ink-muted">
+       {listPagination.current_page} / {listPagination.last_page}
+       <span className="ml-2">({listPagination.total})</span>
+      </span>
+      <button
+       type="button"
+       onClick={() => onListPageChange(listPagination.current_page + 1)}
+       disabled={listPagination.current_page >= listPagination.last_page}
+       className="rounded-lg border border-theme px-3 py-1.5 text-sm text-ink transition hover:bg-sand disabled:opacity-50"
+      >
+       Вперёд →
+      </button>
+     </div>
+    )}
+   </>
   );
 
  return (

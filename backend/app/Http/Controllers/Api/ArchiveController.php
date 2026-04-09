@@ -2,21 +2,39 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\PaginatedReorder;
 use App\Http\Controllers\Controller;
 use App\Models\Archive;
-use App\Models\Location;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class ArchiveController extends Controller
 {
+    use PaginatedReorder;
+
     public function index(Request $request, int $locationId): JsonResponse
     {
         $location = $request->user()->locations()->findOrFail($locationId);
-        $archives = $location->archives()->withCount('books')->orderBy('sort_order')->orderBy('id')->get();
 
-        return response()->json($archives);
+        if ($request->boolean('compact')) {
+            $archives = $location->archives()->orderBy('sort_order')->orderBy('id')->get(['id', 'name']);
+
+            return response()->json($archives);
+        }
+
+        $perPage = min(max((int) $request->get('per_page', 24), 1), 100);
+        $paginated = $location->archives()->withCount('books')->orderBy('sort_order')->orderBy('id')->paginate($perPage);
+
+        return response()->json([
+            'data' => $paginated->items(),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+            ],
+        ]);
     }
 
     public function store(Request $request, int $locationId): JsonResponse
@@ -75,20 +93,32 @@ class ArchiveController extends Controller
     {
         $location = $request->user()->locations()->findOrFail($locationId);
 
-        $ids = $request->validate([
+        $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer',
-        ])['ids'];
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
 
-        $saved = $location->archives()->pluck('id')->sort()->values()->all();
-        $incoming = collect($ids)->sort()->values()->all();
+        $ids = $validated['ids'];
 
-        if ($saved !== $incoming) {
-            return response()->json(['message' => 'Список id не совпадает с архивами локации'], 422);
+        if (isset($validated['page'])) {
+            $page = (int) $validated['page'];
+            $perPage = (int) ($validated['per_page'] ?? 24);
+            $allIds = $location->archives()->orderBy('sort_order')->orderBy('id')->pluck('id')->all();
+            $merged = $this->mergePartialReorder($allIds, $page, $perPage, $ids);
+        } else {
+            $saved = $location->archives()->pluck('id')->sort()->values()->all();
+            $incoming = collect($ids)->sort()->values()->all();
+
+            if ($saved !== $incoming) {
+                return response()->json(['message' => 'Список id не совпадает с архивами локации'], 422);
+            }
+            $merged = $ids;
         }
 
-        DB::transaction(function () use ($location, $ids) {
-            foreach ($ids as $position => $id) {
+        DB::transaction(function () use ($location, $merged) {
+            foreach ($merged as $position => $id) {
                 $location->archives()->where('id', $id)->update(['sort_order' => $position]);
             }
         });

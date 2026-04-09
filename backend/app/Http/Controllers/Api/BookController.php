@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Controllers\Concerns\PaginatedReorder;
 use App\Http\Controllers\Controller;
 use App\Models\Archive;
 use App\Models\Book;
@@ -12,14 +13,25 @@ use Illuminate\Support\Facades\Storage;
 
 class BookController extends Controller
 {
+    use PaginatedReorder;
+
     public function index(Request $request, int $archiveId): JsonResponse
     {
         $archive = Archive::whereHas('location', fn ($q) => $q->where('user_id', $request->user()->id))
             ->findOrFail($archiveId);
 
-        $books = $archive->books()->orderBy('sort_order')->orderBy('id')->get();
+        $perPage = min(max((int) $request->get('per_page', 24), 1), 100);
+        $paginated = $archive->books()->orderBy('sort_order')->orderBy('id')->paginate($perPage);
 
-        return response()->json($books);
+        return response()->json([
+            'data' => $paginated->items(),
+            'meta' => [
+                'current_page' => $paginated->currentPage(),
+                'last_page' => $paginated->lastPage(),
+                'per_page' => $paginated->perPage(),
+                'total' => $paginated->total(),
+            ],
+        ]);
     }
 
     public function store(Request $request, int $archiveId): JsonResponse
@@ -117,20 +129,32 @@ class BookController extends Controller
         $archive = Archive::whereHas('location', fn ($q) => $q->where('user_id', $request->user()->id))
             ->findOrFail($archiveId);
 
-        $ids = $request->validate([
+        $validated = $request->validate([
             'ids' => 'required|array',
             'ids.*' => 'integer',
-        ])['ids'];
+            'page' => 'sometimes|integer|min:1',
+            'per_page' => 'sometimes|integer|min:1|max:100',
+        ]);
 
-        $saved = $archive->books()->pluck('id')->sort()->values()->all();
-        $incoming = collect($ids)->sort()->values()->all();
+        $ids = $validated['ids'];
 
-        if ($saved !== $incoming) {
-            return response()->json(['message' => 'Список id не совпадает с книгами архива'], 422);
+        if (isset($validated['page'])) {
+            $page = (int) $validated['page'];
+            $perPage = (int) ($validated['per_page'] ?? 24);
+            $allIds = $archive->books()->orderBy('sort_order')->orderBy('id')->pluck('id')->all();
+            $merged = $this->mergePartialReorder($allIds, $page, $perPage, $ids);
+        } else {
+            $saved = $archive->books()->pluck('id')->sort()->values()->all();
+            $incoming = collect($ids)->sort()->values()->all();
+
+            if ($saved !== $incoming) {
+                return response()->json(['message' => 'Список id не совпадает с книгами архива'], 422);
+            }
+            $merged = $ids;
         }
 
-        DB::transaction(function () use ($archive, $ids) {
-            foreach ($ids as $position => $id) {
+        DB::transaction(function () use ($archive, $merged) {
+            foreach ($merged as $position => $id) {
                 $archive->books()->where('id', $id)->update(['sort_order' => $position]);
             }
         });

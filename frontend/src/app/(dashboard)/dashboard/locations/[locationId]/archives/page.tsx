@@ -40,7 +40,7 @@ export default function LocationArchivesRoutePage({
         if (catalogStore.locations.length === 0) {
           await catalogStore.loadLocations();
         }
-        await catalogStore.loadArchives(locationId, { trackLoading: false });
+        await catalogStore.loadArchives(locationId, { trackLoading: false, page: 1 });
       } finally {
         setRouteLoading(false);
       }
