@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
@@ -23,8 +24,8 @@ function DragHandleIcon() {
 }
 
 /**
- * Слой сортировки: ref и transform на обёртке; listeners только на ручке —
- * иначе на мобильных перехватываются touch-события всей карточки и ломается скролл.
+ * Грубый указатель (тач): listeners только на ручке — иначе ломается скролл списка.
+ * Точный (мышь): вся карточка перетаскивается, как раньше; ручка скрыта.
  */
 export function SortableCardItem({
   id,
@@ -37,6 +38,16 @@ export function SortableCardItem({
     id,
   });
 
+  const [dragViaHandleOnly, setDragViaHandleOnly] = useState(true);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(pointer: coarse)");
+    const sync = () => setDragViaHandleOnly(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -48,18 +59,23 @@ export function SortableCardItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative min-w-0 ${isDragging ? "touch-none" : ""}`}
+      className={`relative min-w-0 ${isDragging ? "touch-none" : ""} ${
+        dragViaHandleOnly ? "" : `${isDragging ? "cursor-grabbing" : "cursor-grab"}`
+      }`}
+      {...(dragViaHandleOnly ? {} : { ...attributes, ...listeners })}
     >
-      <button
-        type="button"
-        className={`sortable-card-item__handle touch-none absolute left-2 top-2 z-30 flex min-h-11 min-w-11 cursor-grab items-center justify-center rounded-lg border border-theme/80 bg-white/95 text-ink-light shadow-sm backdrop-blur-sm transition hover:border-accent/50 hover:bg-white hover:text-accent active:cursor-grabbing ${isDragging ? "cursor-grabbing" : ""}`}
-        title="Перетащить для сортировки"
-        aria-label="Перетащить для изменения порядка"
-        {...attributes}
-        {...listeners}
-      >
-        <DragHandleIcon />
-      </button>
+      {dragViaHandleOnly && (
+        <button
+          type="button"
+          className={`sortable-card-item__handle touch-none absolute left-2 top-2 z-30 flex min-h-11 min-w-11 cursor-grab items-center justify-center rounded-lg border border-theme/80 bg-white/95 text-ink-light shadow-sm backdrop-blur-sm transition hover:border-accent/50 hover:bg-white hover:text-accent active:cursor-grabbing ${isDragging ? "cursor-grabbing" : ""}`}
+          title="Перетащить для сортировки"
+          aria-label="Перетащить для изменения порядка"
+          {...attributes}
+          {...listeners}
+        >
+          <DragHandleIcon />
+        </button>
+      )}
       {children}
     </div>
   );
