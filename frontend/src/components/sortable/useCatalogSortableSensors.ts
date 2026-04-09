@@ -1,29 +1,16 @@
 "use client";
 
-import {
-  KeyboardSensor,
-  MouseSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-} from "@dnd-kit/core";
+import { KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 
 /**
- * Сенсоры для сортировки карточек каталога.
- * Мышь/трекпад: перетаскивание только после заметного смещения (не с первого пикселя).
- * Касание: удержание без заметного движения — иначе жест считается скроллом (tolerance внутри delay).
+ * Сенсоры для сортировки: перетаскивание только с ручки (`SortableCardItem`),
+ * поэтому достаточно порога по расстоянию — скролл по карточке не перехватывается.
  */
 export function useCatalogSortableSensors() {
   return useSensors(
-    useSensor(MouseSensor, {
-      activationConstraint: { distance: 12 },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 280,
-        tolerance: 10,
-      },
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 10 },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
