@@ -75,9 +75,9 @@ export function SortableCardItem({
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative min-w-0 rounded-2xl ${
-        isDragging ? "touch-none ring-2 ring-accent/60" : "touch-pan-y"
-      } ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
+      className={`sortable-card-item relative min-w-0 rounded-2xl ${
+        showTouchHint ? "sortable-card-item--coarse-touch" : ""
+      } ${isDragging ? "ring-2 ring-accent/60" : ""} ${isDragging ? "cursor-grabbing" : "cursor-grab"}`}
       {...attributes}
       {...listeners}
     >

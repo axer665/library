@@ -6,6 +6,7 @@ import { useCatalogSortableSensors } from "@/components/sortable/useCatalogSorta
 import type { Location } from "@/stores/catalogStore";
 import { LocationCard } from "@/components/cards/LocationCard";
 import { CardGrid } from "@/components/cards/CardGrid";
+import { CatalogSortableDragTouchLock } from "@/components/sortable/CatalogSortableDragTouchLock";
 import { SortableCardItem } from "@/components/sortable/SortableCardItem";
 
 interface LocationListProps {
@@ -55,6 +56,7 @@ export function LocationList({
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <CatalogSortableDragTouchLock />
       <SortableContext items={ids} strategy={rectSortingStrategy}>
         <CardGrid>
           {locations.map((loc) => (

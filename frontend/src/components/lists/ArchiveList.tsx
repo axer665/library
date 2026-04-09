@@ -6,6 +6,7 @@ import { useCatalogSortableSensors } from "@/components/sortable/useCatalogSorta
 import type { Archive } from "@/stores/catalogStore";
 import { ArchiveCard } from "@/components/cards/ArchiveCard";
 import { CardGrid } from "@/components/cards/CardGrid";
+import { CatalogSortableDragTouchLock } from "@/components/sortable/CatalogSortableDragTouchLock";
 import { SortableCardItem } from "@/components/sortable/SortableCardItem";
 
 interface ArchiveListProps {
@@ -47,6 +48,7 @@ export function ArchiveList({ archives, onSelect, onEdit, onReorder }: ArchiveLi
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <CatalogSortableDragTouchLock />
       <SortableContext items={ids} strategy={rectSortingStrategy}>
         <CardGrid>
           {archives.map((arch) => (

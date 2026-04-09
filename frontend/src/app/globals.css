@@ -76,6 +76,17 @@ input:disabled {
 .hover-border-accent:hover { border-color: var(--color-accent); }
 .hover-ring-accent:hover { --tw-ring-color: var(--color-accent); }
 
+/* См. SortableCardItem + CatalogSortableDragTouchLock: touchmove сидит на deepest target внутри карточки. */
+.sortable-card-item--coarse-touch,
+.sortable-card-item--coarse-touch :where(*) {
+  touch-action: pan-y;
+}
+
+html.catalog-dnd-dragging .sortable-card-item--coarse-touch,
+html.catalog-dnd-dragging .sortable-card-item--coarse-touch :where(*) {
+  touch-action: none !important;
+}
+
 .input-file-accent::file-selector-button {
   margin-right: 0.5rem;
   border: 0;

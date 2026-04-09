@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import {
   KeyboardSensor,
-  PointerSensor,
+  MouseSensor,
   TouchSensor,
   useSensor,
   useSensors,
@@ -34,7 +34,8 @@ export const CATALOG_TOUCH_HOLD_TOLERANCE_PX = 12;
 
 /**
  * Тач: удержание ~CATALOG_TOUCH_HOLD_MS без сдвига > tolerance — затем можно вести (сортировка).
- * Мышь: смещение от 10px. TouchSensor.setup() — для iOS Safari.
+ * Мышь: MouseSensor (не PointerSensor) — иначе тач идёт в Pointer Events и без touch-action:none
+ * скролл перехватывается так, что preventDefault на touchmove не спасает (см. доки dnd-kit).
  */
 export function useCatalogSortableSensors() {
   useEffect(() => acquireTouchSensorSetup(), []);
@@ -46,7 +47,7 @@ export function useCatalogSortableSensors() {
         tolerance: CATALOG_TOUCH_HOLD_TOLERANCE_PX,
       },
     }),
-    useSensor(PointerSensor, {
+    useSensor(MouseSensor, {
       activationConstraint: { distance: 10 },
     }),
     useSensor(KeyboardSensor, {

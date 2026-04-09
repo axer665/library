@@ -6,6 +6,7 @@ import { useCatalogSortableSensors } from "@/components/sortable/useCatalogSorta
 import type { Book } from "@/stores/catalogStore";
 import { BookCard } from "@/components/cards/BookCard";
 import { CardGrid } from "@/components/cards/CardGrid";
+import { CatalogSortableDragTouchLock } from "@/components/sortable/CatalogSortableDragTouchLock";
 import { SortableCardItem } from "@/components/sortable/SortableCardItem";
 
 interface BookListProps {
@@ -41,6 +42,7 @@ export function BookList({ books, onEdit, onReorder }: BookListProps) {
 
   return (
     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+      <CatalogSortableDragTouchLock />
       <SortableContext items={ids} strategy={rectSortingStrategy}>
         <CardGrid>
           {books.map((book) => (
