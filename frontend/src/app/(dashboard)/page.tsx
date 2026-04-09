@@ -52,6 +52,8 @@ function HomePageInner() {
   });
   const [heroScrollY, setHeroScrollY] = useState(0);
   const [heroReduceMotion, setHeroReduceMotion] = useState(false);
+  /** Какой фон hero активен видимым слоем (0 | 1); второй слой с противоположной opacity для кроссфейда. */
+  const [heroBgActive, setHeroBgActive] = useState(0);
 
   useEffect(() => {
     setNavMounted(true);
@@ -73,6 +75,14 @@ function HomePageInner() {
   }, []);
 
   const heroParallaxY = heroReduceMotion ? 0 : heroScrollY * 0.22;
+
+  useEffect(() => {
+    if (heroReduceMotion) return;
+    const t = window.setInterval(() => {
+      setHeroBgActive((n) => (n === 0 ? 1 : 0));
+    }, 20_000);
+    return () => window.clearInterval(t);
+  }, [heroReduceMotion]);
 
   useEffect(() => {
     if (authStore.token) void authStore.syncUserFromApi();
@@ -287,15 +297,43 @@ function HomePageInner() {
               }}
               aria-hidden
             >
-              <Image
-                src="/images/landing-hero-bookshelf.png"
-                alt=""
-                fill
-                className="object-cover object-[55%_28%]"
-                sizes="100vw"
-                priority
-                quality={88}
-              />
+              <div className="absolute inset-0">
+                <div
+                  className={
+                    heroReduceMotion
+                      ? "absolute inset-0"
+                      : "absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
+                  }
+                  style={{ opacity: heroBgActive === 0 ? 1 : 0 }}
+                >
+                  <Image
+                    src="/images/landing-hero-bookshelf.png"
+                    alt=""
+                    fill
+                    className="object-cover object-[55%_28%]"
+                    sizes="100vw"
+                    priority
+                    quality={88}
+                  />
+                </div>
+                <div
+                  className={
+                    heroReduceMotion
+                      ? "absolute inset-0"
+                      : "absolute inset-0 transition-opacity duration-[2000ms] ease-in-out"
+                  }
+                  style={{ opacity: heroBgActive === 1 ? 1 : 0 }}
+                >
+                  <Image
+                    src="/images/landing-hero-cat-nightstand.png"
+                    alt=""
+                    fill
+                    className="object-cover object-[50%_32%]"
+                    sizes="100vw"
+                    quality={88}
+                  />
+                </div>
+              </div>
               <div
                 className="absolute inset-0"
                 style={{
