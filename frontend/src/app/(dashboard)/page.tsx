@@ -226,7 +226,7 @@ function HomePageInner() {
   return (
     <>
       <div className="landing flex min-h-screen flex-col bg-cream text-ink">
-        <header className="border-b border-theme bg-parchment">
+        <header className="relative z-40 border-b border-theme bg-parchment">
           <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
             <BrandLogo href="/" />
             <nav aria-label="Навигация по сайту" className="flex min-h-10 items-center gap-3">
@@ -249,7 +249,7 @@ function HomePageInner() {
                       {menuOpen && (
                         <div
                           role="menu"
-                          className="absolute right-0 top-full z-50 mt-1 min-w-[14rem] rounded-xl border border-theme bg-white py-1 shadow-lg"
+                          className="absolute right-0 top-full z-[60] mt-1 min-w-[14rem] rounded-xl border border-theme bg-white py-1 shadow-lg"
                         >
                           <Link
                             role="menuitem"
